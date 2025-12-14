@@ -1,0 +1,752 @@
+{
+	"info": {
+		"_postman_id": "castify-api-collection-v2",
+		"name": "Castify API - Updated",
+		"description": "Talent Casting Marketplace REST API - Complete and verified endpoint collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User (Talent)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"talent_token\", jsonData.token);",
+									"    pm.environment.set(\"talent_user_id\", jsonData.userId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newtalent@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"TALENT\",\n  \"phone\": \"+1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register User (Client)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"client_token\", jsonData.token);",
+									"    pm.environment.set(\"client_user_id\", jsonData.userId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newclient@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"CLIENT\",\n  \"phone\": \"+1234567899\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Talent - Test Data)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"talent_token\", jsonData.token);",
+									"    pm.environment.set(\"talent_user_id\", jsonData.userId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.actor@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Client - Test Data)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"client_token\", jsonData.token);",
+									"    pm.environment.set(\"client_user_id\", jsonData.userId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"abc.productions@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "me"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Talent Profile",
+			"item": [
+				{
+					"name": "Create/Update Talent Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"talent_profile_id\", jsonData.talentProfileId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"John Actor\",\n  \"bio\": \"Experienced actor with 10+ years in film and television\",\n  \"location\": {\n    \"mode\": \"SPECIFIC\",\n    \"latitude\": 34.0522,\n    \"longitude\": -118.2437,\n    \"city\": \"Los Angeles\",\n    \"country\": \"USA\"\n  },\n  \"profileImageUrl\": \"https://example.com/profile.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/talents/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "profile"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Profile (Remote Location)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Remote Worker\",\n  \"bio\": \"Voice actor working remotely worldwide\",\n  \"location\": {\n    \"mode\": \"REMOTE\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/talents/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "profile"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Talent Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/talents/my-profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "my-profile"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Talent Profile by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/talents/{{talent_profile_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "{{talent_profile_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Talent Profile (Test Data - John Actor)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/talents/10000001-0000-0000-0000-000000000001",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "10000001-0000-0000-0000-000000000001"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Talent Location",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"location\": {\n    \"mode\": \"SPECIFIC\",\n    \"latitude\": 40.7128,\n    \"longitude\": -74.0060,\n    \"city\": \"New York\",\n    \"country\": \"USA\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/talents/location",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "location"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Talent Languages",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"languages\": [\"English\", \"Spanish\", \"French\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/talents/languages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "languages"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Talent Tags",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tags\": [\"actor\", \"voice-over\", \"drama\", \"action\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/talents/tags",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "tags"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Talent Capabilities",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"canDoVoiceover\": true,\n  \"canDoActing\": true,\n  \"canDoModeling\": false,\n  \"canDoSinging\": true,\n  \"canDoDancing\": false,\n  \"canDoHosting\": true,\n  \"otherCapabilities\": \"Stunt work, martial arts\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/talents/capabilities",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "capabilities"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Social Links",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"socialLinks\": [\n    {\n      \"platform\": \"Instagram\",\n      \"url\": \"https://instagram.com/johnactor\",\n      \"followerCount\": 75000\n    },\n    {\n      \"platform\": \"TikTok\",\n      \"url\": \"https://tiktok.com/@johnactor\",\n      \"followerCount\": 120000\n    },\n    {\n      \"platform\": \"YouTube\",\n      \"url\": \"https://youtube.com/johnactor\",\n      \"followerCount\": 50000\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/talents/social-links",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "social-links"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Talents (by capabilities)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"canDoActing\": true,\n  \"canDoVoiceover\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/talents/search",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "search"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Talents (by tags and languages)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tags\": [\"actor\", \"voice-over\"],\n  \"languages\": [\"English\", \"Spanish\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/talents/search",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "search"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Talents (by location)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"latitude\": 34.0522,\n  \"longitude\": -118.2437,\n  \"radiusKm\": 50,\n  \"verificationStatus\": \"VERIFIED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/talents/search",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "search"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Talents (by rating and tier)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"minAverageRating\": 4.5,\n  \"tiers\": [\"PREMIUM\", \"GOLD\"],\n  \"minCompletedCollaborations\": 10\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/talents/search",
+							"host": ["{{base_url}}"],
+							"path": ["api", "talents", "search"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ratings & Statistics",
+			"item": [
+				{
+					"name": "Create Rating",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"rating_id\", jsonData.ratingId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"talentProfileId\": \"{{talent_profile_id}}\",\n  \"collaborationId\": null,\n  \"overallRating\": 5,\n  \"professionalismRating\": 5,\n  \"qualityRating\": 5,\n  \"communicationRating\": 4,\n  \"timelinessRating\": 5,\n  \"reviewText\": \"Excellent work! Very professional and delivered high quality results on time.\",\n  \"wouldWorkAgain\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/ratings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "ratings"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Rating (Test Data - John Actor)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"talentProfileId\": \"10000001-0000-0000-0000-000000000001\",\n  \"collaborationId\": null,\n  \"overallRating\": 5,\n  \"professionalismRating\": 5,\n  \"qualityRating\": 5,\n  \"communicationRating\": 5,\n  \"timelinessRating\": 4,\n  \"reviewText\": \"Outstanding performance! Exceeded all expectations.\",\n  \"wouldWorkAgain\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/ratings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "ratings"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Rating by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/ratings/{{rating_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "ratings", "{{rating_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Talent Ratings (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/ratings/talent/{{talent_profile_id}}?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "ratings", "talent", "{{talent_profile_id}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Talent Ratings (Test Data - John Actor)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/ratings/talent/10000001-0000-0000-0000-000000000001?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "ratings", "talent", "10000001-0000-0000-0000-000000000001"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Talent Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/statistics/{{talent_profile_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "statistics", "{{talent_profile_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Talent Statistics (Test Data - John Actor)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/statistics/10000001-0000-0000-0000-000000000001",
+							"host": ["{{base_url}}"],
+							"path": ["api", "statistics", "10000001-0000-0000-0000-000000000001"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Leaderboard",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/leaderboard?limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "leaderboard"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}
