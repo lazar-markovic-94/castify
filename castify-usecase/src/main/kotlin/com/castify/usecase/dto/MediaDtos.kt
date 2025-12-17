@@ -74,3 +74,11 @@ data class PortfolioItemResponse(
         )
     }
 }
+
+data class PortfolioItemWithMediaResponse(
+    val portfolioItemId: UUID,
+    val talentProfileId: UUID,
+    val mediaAsset: MediaAssetResponse,
+    val displayOrder: Int,
+    val addedAt: Instant
+)

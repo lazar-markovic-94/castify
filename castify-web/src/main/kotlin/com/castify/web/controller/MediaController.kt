@@ -4,8 +4,10 @@ import com.castify.usecase.dto.AddToPortfolioRequest
 import com.castify.usecase.dto.CreateMediaAssetRequest
 import com.castify.usecase.dto.MediaAssetResponse
 import com.castify.usecase.dto.PortfolioItemResponse
+import com.castify.usecase.dto.PortfolioItemWithMediaResponse
 import com.castify.usecase.media.AddToPortfolioUseCase
 import com.castify.usecase.media.CreateMediaAssetUseCase
+import com.castify.usecase.media.GetPortfolioItemsUseCase
 import com.castify.usecase.media.RemoveFromPortfolioUseCase
 import com.castify.web.security.SecurityUtils
 import io.swagger.v3.oas.annotations.Operation
@@ -21,7 +23,8 @@ import java.util.*
 class MediaController(
     private val createMediaAssetUseCase: CreateMediaAssetUseCase,
     private val addToPortfolioUseCase: AddToPortfolioUseCase,
-    private val removeFromPortfolioUseCase: RemoveFromPortfolioUseCase
+    private val removeFromPortfolioUseCase: RemoveFromPortfolioUseCase,
+    private val getPortfolioItemsUseCase: GetPortfolioItemsUseCase
 ) {
 
     @PostMapping("/assets")
@@ -46,5 +49,11 @@ class MediaController(
     fun removeFromPortfolio(@PathVariable portfolioItemId: UUID) {
         val userId = SecurityUtils.getCurrentUserId()
         removeFromPortfolioUseCase.execute(userId, portfolioItemId)
+    }
+
+    @GetMapping("/portfolio/talent/{talentProfileId}")
+    @Operation(summary = "Get portfolio items for a talent")
+    fun getPortfolioItems(@PathVariable talentProfileId: UUID): List<PortfolioItemWithMediaResponse> {
+        return getPortfolioItemsUseCase.execute(talentProfileId)
     }
 }
