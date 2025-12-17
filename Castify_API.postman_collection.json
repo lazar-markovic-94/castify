@@ -1,8 +1,8 @@
 {
 	"info": {
-		"_postman_id": "castify-api-collection-v2",
-		"name": "Castify API - Updated",
-		"description": "Talent Casting Marketplace REST API - Complete and verified endpoint collection",
+		"_postman_id": "castify-api-collection-v3",
+		"name": "Castify API - Complete (v3)",
+		"description": "Castify Talent Casting Marketplace - Complete API collection with Collaborations, Ratings, Portfolio, and Messaging",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -84,7 +84,7 @@
 					"response": []
 				},
 				{
-					"name": "Login (Talent - Test Data)",
+					"name": "Login (Talent)",
 					"event": [
 						{
 							"listen": "test",
@@ -121,7 +121,7 @@
 					"response": []
 				},
 				{
-					"name": "Login (Client - Test Data)",
+					"name": "Login (Client)",
 					"event": [
 						{
 							"listen": "test",
@@ -221,32 +221,6 @@
 					"response": []
 				},
 				{
-					"name": "Create Profile (Remote Location)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{talent_token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"fullName\": \"Remote Worker\",\n  \"bio\": \"Voice actor working remotely worldwide\",\n  \"location\": {\n    \"mode\": \"REMOTE\"\n  }\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/api/talents/profile",
-							"host": ["{{base_url}}"],
-							"path": ["api", "talents", "profile"]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Get My Talent Profile",
 					"request": {
 						"method": "GET",
@@ -271,31 +245,13 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{talent_token}}"
+								"value": "Bearer {{client_token}}"
 							}
 						],
 						"url": {
 							"raw": "{{base_url}}/api/talents/{{talent_profile_id}}",
 							"host": ["{{base_url}}"],
 							"path": ["api", "talents", "{{talent_profile_id}}"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Talent Profile (Test Data - John Actor)",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{talent_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/talents/10000001-0000-0000-0000-000000000001",
-							"host": ["{{base_url}}"],
-							"path": ["api", "talents", "10000001-0000-0000-0000-000000000001"]
 						}
 					},
 					"response": []
@@ -420,7 +376,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"socialLinks\": [\n    {\n      \"platform\": \"Instagram\",\n      \"url\": \"https://instagram.com/johnactor\",\n      \"followerCount\": 75000\n    },\n    {\n      \"platform\": \"TikTok\",\n      \"url\": \"https://tiktok.com/@johnactor\",\n      \"followerCount\": 120000\n    },\n    {\n      \"platform\": \"YouTube\",\n      \"url\": \"https://youtube.com/johnactor\",\n      \"followerCount\": 50000\n    }\n  ]\n}"
+							"raw": "{\n  \"socialLinks\": [\n    {\n      \"platform\": \"Instagram\",\n      \"url\": \"https://instagram.com/johnactor\",\n      \"followerCount\": 75000\n    },\n    {\n      \"platform\": \"TikTok\",\n      \"url\": \"https://tiktok.com/@johnactor\",\n      \"followerCount\": 120000\n    }\n  ]\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/talents/social-links",
@@ -431,7 +387,7 @@
 					"response": []
 				},
 				{
-					"name": "Search Talents (by capabilities)",
+					"name": "Search Talents",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -446,85 +402,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"canDoActing\": true,\n  \"canDoVoiceover\": true\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/api/talents/search",
-							"host": ["{{base_url}}"],
-							"path": ["api", "talents", "search"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Search Talents (by tags and languages)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{client_token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"tags\": [\"actor\", \"voice-over\"],\n  \"languages\": [\"English\", \"Spanish\"]\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/api/talents/search",
-							"host": ["{{base_url}}"],
-							"path": ["api", "talents", "search"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Search Talents (by location)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{client_token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"latitude\": 34.0522,\n  \"longitude\": -118.2437,\n  \"radiusKm\": 50,\n  \"verificationStatus\": \"VERIFIED\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/api/talents/search",
-							"host": ["{{base_url}}"],
-							"path": ["api", "talents", "search"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Search Talents (by rating and tier)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{client_token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"minAverageRating\": 4.5,\n  \"tiers\": [\"PREMIUM\", \"GOLD\"],\n  \"minCompletedCollaborations\": 10\n}"
+							"raw": "{\n  \"canDoActing\": true,\n  \"canDoVoiceover\": true,\n  \"languages\": [\"English\"],\n  \"tags\": [\"actor\"]\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/talents/search",
@@ -537,7 +415,551 @@
 			]
 		},
 		{
-			"name": "Ratings & Statistics",
+			"name": "Client Organization",
+			"item": [
+				{
+					"name": "Create/Update Client Organization",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201 || pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"client_org_id\", jsonData.clientOrgId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"organizationName\": \"ABC Productions\",\n  \"orgType\": \"BRAND\",\n  \"description\": \"Leading production company for commercial content\",\n  \"website\": \"https://abcproductions.com\",\n  \"contactEmail\": \"contact@abcproductions.com\",\n  \"contactPhone\": \"+1-555-0100\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/clients/organization",
+							"host": ["{{base_url}}"],
+							"path": ["api", "clients", "organization"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Organization",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/clients/my-organization",
+							"host": ["{{base_url}}"],
+							"path": ["api", "clients", "my-organization"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Portfolio & Media",
+			"item": [
+				{
+					"name": "Upload Media Asset",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"media_asset_id\", jsonData.mediaAssetId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "title",
+									"value": "My Portfolio Image",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Professional headshot",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/media/upload",
+							"host": ["{{base_url}}"],
+							"path": ["api", "media", "upload"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Media to Portfolio",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mediaAssetId\": \"{{media_asset_id}}\",\n  \"displayOrder\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/media/portfolio",
+							"host": ["{{base_url}}"],
+							"path": ["api", "media", "portfolio"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Portfolio Items",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/media/portfolio",
+							"host": ["{{base_url}}"],
+							"path": ["api", "media", "portfolio"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Talent Portfolio Items (by talent ID)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/media/portfolio/{{talent_profile_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "media", "portfolio", "{{talent_profile_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove from Portfolio",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/media/portfolio/{{media_asset_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "media", "portfolio", "{{media_asset_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Messaging",
+			"item": [
+				{
+					"name": "Create Conversation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"conversation_id\", jsonData.conversationId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"talentUserId\": \"{{talent_user_id}}\",\n  \"clientUserId\": \"{{client_user_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/conversations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "conversations"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Conversations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/conversations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "conversations"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Conversation Messages",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/conversations/{{conversation_id}}/messages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "conversations", "{{conversation_id}}", "messages"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Hi! I'm interested in working with you on an upcoming project.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/conversations/{{conversation_id}}/messages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "conversations", "{{conversation_id}}", "messages"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Collaborations",
+			"item": [
+				{
+					"name": "Create Collaboration Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"collaboration_id\", jsonData.collaborationId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"talentProfileId\": \"{{talent_profile_id}}\",\n  \"title\": \"Voice Over for Commercial\",\n  \"description\": \"We need a professional voice over artist for a 30-second commercial advertisement\",\n  \"budget\": 1500.00,\n  \"startDate\": \"2025-01-15T00:00:00.000Z\",\n  \"endDate\": \"2025-01-30T00:00:00.000Z\",\n  \"notes\": \"Please provide 2-3 different takes. Studio time will be provided.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/collaborations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "collaborations"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Client Collaborations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/collaborations/client",
+							"host": ["{{base_url}}"],
+							"path": ["api", "collaborations", "client"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Client Collaborations (by status)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/collaborations/client?status=PROPOSED",
+							"host": ["{{base_url}}"],
+							"path": ["api", "collaborations", "client"],
+							"query": [
+								{
+									"key": "status",
+									"value": "PROPOSED"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Talent Collaborations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/collaborations/talent",
+							"host": ["{{base_url}}"],
+							"path": ["api", "collaborations", "talent"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Talent Collaborations (by status)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/collaborations/talent?status=PROPOSED",
+							"host": ["{{base_url}}"],
+							"path": ["api", "collaborations", "talent"],
+							"query": [
+								{
+									"key": "status",
+									"value": "PROPOSED"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Collaboration by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/collaborations/{{collaboration_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "collaborations", "{{collaboration_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Accept Collaboration (TALENT)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/collaborations/{{collaboration_id}}/accept",
+							"host": ["{{base_url}}"],
+							"path": ["api", "collaborations", "{{collaboration_id}}", "accept"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Decline Collaboration (TALENT)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{talent_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/collaborations/{{collaboration_id}}/decline",
+							"host": ["{{base_url}}"],
+							"path": ["api", "collaborations", "{{collaboration_id}}", "decline"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Start Collaboration",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/collaborations/{{collaboration_id}}/start",
+							"host": ["{{base_url}}"],
+							"path": ["api", "collaborations", "{{collaboration_id}}", "start"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Collaboration",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/collaborations/{{collaboration_id}}/complete",
+							"host": ["{{base_url}}"],
+							"path": ["api", "collaborations", "{{collaboration_id}}", "complete"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Collaboration",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/collaborations/{{collaboration_id}}/cancel",
+							"host": ["{{base_url}}"],
+							"path": ["api", "collaborations", "{{collaboration_id}}", "cancel"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ratings & Reviews",
 			"item": [
 				{
 					"name": "Create Rating",
@@ -569,56 +991,12 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"talentProfileId\": \"{{talent_profile_id}}\",\n  \"collaborationId\": null,\n  \"overallRating\": 5,\n  \"professionalismRating\": 5,\n  \"qualityRating\": 5,\n  \"communicationRating\": 4,\n  \"timelinessRating\": 5,\n  \"reviewText\": \"Excellent work! Very professional and delivered high quality results on time.\",\n  \"wouldWorkAgain\": true\n}"
+							"raw": "{\n  \"talentProfileId\": \"{{talent_profile_id}}\",\n  \"collaborationId\": \"{{collaboration_id}}\",\n  \"rating\": 5,\n  \"reviewText\": \"Excellent work! Very professional and delivered high quality results on time.\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/ratings",
 							"host": ["{{base_url}}"],
 							"path": ["api", "ratings"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Rating (Test Data - John Actor)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{client_token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"talentProfileId\": \"10000001-0000-0000-0000-000000000001\",\n  \"collaborationId\": null,\n  \"overallRating\": 5,\n  \"professionalismRating\": 5,\n  \"qualityRating\": 5,\n  \"communicationRating\": 5,\n  \"timelinessRating\": 4,\n  \"reviewText\": \"Outstanding performance! Exceeded all expectations.\",\n  \"wouldWorkAgain\": true\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/api/ratings",
-							"host": ["{{base_url}}"],
-							"path": ["api", "ratings"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Rating by ID",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{client_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/ratings/{{rating_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "ratings", "{{rating_id}}"]
 						}
 					},
 					"response": []
@@ -634,37 +1012,9 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/ratings/talent/{{talent_profile_id}}?page=0&size=10",
+							"raw": "{{base_url}}/api/talents/{{talent_profile_id}}/ratings?page=0&size=10",
 							"host": ["{{base_url}}"],
-							"path": ["api", "ratings", "talent", "{{talent_profile_id}}"],
-							"query": [
-								{
-									"key": "page",
-									"value": "0"
-								},
-								{
-									"key": "size",
-									"value": "10"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Talent Ratings (Test Data - John Actor)",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{client_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/ratings/talent/10000001-0000-0000-0000-000000000001?page=0&size=10",
-							"host": ["{{base_url}}"],
-							"path": ["api", "ratings", "talent", "10000001-0000-0000-0000-000000000001"],
+							"path": ["api", "talents", "{{talent_profile_id}}", "ratings"],
 							"query": [
 								{
 									"key": "page",
@@ -690,51 +1040,9 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/statistics/{{talent_profile_id}}",
+							"raw": "{{base_url}}/api/talents/{{talent_profile_id}}/statistics",
 							"host": ["{{base_url}}"],
-							"path": ["api", "statistics", "{{talent_profile_id}}"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Talent Statistics (Test Data - John Actor)",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{client_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/statistics/10000001-0000-0000-0000-000000000001",
-							"host": ["{{base_url}}"],
-							"path": ["api", "statistics", "10000001-0000-0000-0000-000000000001"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Leaderboard",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{client_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/leaderboard?limit=10",
-							"host": ["{{base_url}}"],
-							"path": ["api", "leaderboard"],
-							"query": [
-								{
-									"key": "limit",
-									"value": "10"
-								}
-							]
+							"path": ["api", "talents", "{{talent_profile_id}}", "statistics"]
 						}
 					},
 					"response": []
