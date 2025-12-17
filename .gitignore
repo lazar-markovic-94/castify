@@ -150,13 +150,25 @@ bin/
 *.env
 
 ### Application Properties ###
-# Uncomment if you want to ignore sensitive config files
-# application-*.yml
-# application-*.yaml
-# application-*.properties
-# !application.yml
-# !application.yaml
-# !application.properties
+# Ignore environment-specific configs, but keep base application.yml
+application-local.yml
+application-local.yaml
+application-local.properties
+application-dev.yml
+application-dev.yaml
+application-dev.properties
+application-prod.yml
+application-prod.yaml
+application-prod.properties
+application-staging.yml
+application-staging.yaml
+application-staging.properties
+*-local.yml
+*-local.yaml
+*-local.properties
+!application.yml
+!application.yaml
+!application.properties
 
 ### Logs ###
 logs/
