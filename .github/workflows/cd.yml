@@ -1,0 +1,161 @@
+name: CD - Deploy
+
+# NOTE: This workflow is prepared for future deployment
+# Currently disabled as only local environment exists
+# Uncomment and configure when dev/production environments are ready
+
+on:
+  # Temporarily disabled - uncomment when environments are ready
+  # push:
+  #   branches:
+  #     - main
+  #     - develop
+  #   tags:
+  #     - 'v*.*.*'
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to (configure environments first)'
+        required: true
+        type: choice
+        options:
+          - develop
+          - production
+
+jobs:
+  deploy-develop:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'develop')
+    environment:
+      name: develop
+      url: https://dev.castify.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build application
+        run: mvn clean package -DskipTests -B -Pproduction
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy
+          cp castify-app/target/*.jar deploy/castify-app.jar
+          cp .env.develop.example deploy/.env.example
+
+      - name: Deploy to Development Server
+        run: |
+          echo "🚀 Deploying to Development environment..."
+          echo "Environment: develop"
+          echo "Profile: develop"
+          # Add your deployment commands here
+          # Example: scp, rsync, AWS CLI, kubectl, etc.
+          # scp deploy/castify-app.jar user@dev-server:/opt/castify/
+          # ssh user@dev-server 'systemctl restart castify'
+
+      - name: Health Check
+        run: |
+          echo "Waiting for application to start..."
+          sleep 30
+          # Add health check endpoint call
+          # curl -f https://dev.castify.example.com/actuator/health || exit 1
+
+      - name: Notify Deployment
+        run: |
+          echo "✅ Deployment to Development completed successfully"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment:
+      name: production
+      url: https://castify.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests before production deployment
+        run: mvn test -B
+
+      - name: Build application
+        run: mvn clean package -DskipTests -B -Pproduction
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy
+          cp castify-app/target/*.jar deploy/castify-app.jar
+          cp .env.production.example deploy/.env.example
+
+      - name: Deploy to Production Server
+        run: |
+          echo "🚀 Deploying to Production environment..."
+          echo "Environment: production"
+          echo "Profile: production"
+          # Add your deployment commands here
+          # Example with zero-downtime deployment:
+          # 1. Upload new version
+          # 2. Run database migrations
+          # 3. Switch traffic to new version
+          # 4. Health check
+          # 5. Rollback if issues detected
+
+      - name: Run Database Migrations
+        run: |
+          echo "Running Flyway migrations..."
+          # mvn flyway:migrate -Dflyway.user=${{ secrets.PROD_DB_USER }} -Dflyway.password=${{ secrets.PROD_DB_PASSWORD }}
+
+      - name: Health Check
+        run: |
+          echo "Waiting for application to start..."
+          sleep 30
+          # Add health check endpoint call
+          # curl -f https://castify.example.com/actuator/health || exit 1
+
+      - name: Smoke Tests
+        run: |
+          echo "Running smoke tests..."
+          # Add basic smoke tests to verify critical functionality
+
+      - name: Notify Deployment
+        run: |
+          echo "✅ Deployment to Production completed successfully"
+
+      - name: Create Release Tag
+        if: success() && github.event_name == 'push'
+        run: |
+          git tag "release-$(date +'%Y%m%d-%H%M%S')"
+          echo "Created release tag"
+
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: failure() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    steps:
+      - name: Rollback to Previous Version
+        run: |
+          echo "⚠️ Deployment failed. Initiating rollback..."
+          # Add rollback commands here
+          # Example: revert to previous Docker image, restore previous JAR, etc.
+
+      - name: Notify Rollback
+        run: |
+          echo "⚠️ Rollback completed. Previous version restored."
