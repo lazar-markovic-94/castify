@@ -146,29 +146,25 @@ bin/
 ### Environment Variables ###
 .env
 .env.local
+.env.develop
+.env.production
 .env.*.local
 *.env
+# But keep example files
+!.env*.example
 
 ### Application Properties ###
-# Ignore environment-specific configs, but keep base application.yml
-application-local.yml
-application-local.yaml
-application-local.properties
-application-dev.yml
-application-dev.yaml
-application-dev.properties
-application-prod.yml
-application-prod.yaml
-application-prod.properties
-application-staging.yml
-application-staging.yaml
-application-staging.properties
-*-local.yml
-*-local.yaml
-*-local.properties
+# Allow Spring profile configuration files in resources
 !application.yml
 !application.yaml
 !application.properties
+!application-*.yml
+!application-*.yaml
+!application-*.properties
+# But ignore any local overrides
+**/application-*.local.yml
+**/application-*.local.yaml
+**/application-*.local.properties
 
 ### Logs ###
 logs/
