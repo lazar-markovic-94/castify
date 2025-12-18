@@ -18,6 +18,7 @@
 		<dependency>
 			<groupId>com.castify</groupId>
 			<artifactId>castify-domain</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 
 		<!-- Kotlin -->
@@ -71,5 +72,20 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.jetbrains.kotlin</groupId>
+				<artifactId>kotlin-maven-plugin</artifactId>
+				<configuration>
+					<compilerPlugins>
+						<plugin>spring</plugin>
+						<plugin>jpa</plugin>
+					</compilerPlugins>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

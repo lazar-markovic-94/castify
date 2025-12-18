@@ -43,7 +43,7 @@ jobs:
           cache: maven
 
       - name: Run tests
-        run: mvn clean test -B
+        run: mvn clean install -B
         env:
           SPRING_PROFILES_ACTIVE: local
           DB_URL: jdbc:postgresql://localhost:5432/castify_test

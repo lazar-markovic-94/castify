@@ -130,7 +130,6 @@
 					</args>
 					<compilerPlugins>
 						<plugin>spring</plugin>
-						<plugin>jpa</plugin>
 					</compilerPlugins>
 				</configuration>
 				<dependencies>
@@ -176,7 +175,27 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<!-- Maven JAR Plugin - ensure modules are packaged correctly -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.3.0</version>
+			</plugin>
 		</plugins>
+
+		<pluginManagement>
+			<plugins>
+				<!-- Configure Spring Boot plugin to be disabled by default -->
+				<!-- Only enable it explicitly in executable modules (castify-app) -->
+				<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+					<configuration>
+						<skip>true</skip>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 </project>

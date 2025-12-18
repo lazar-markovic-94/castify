@@ -18,12 +18,14 @@
 		<dependency>
 			<groupId>com.castify</groupId>
 			<artifactId>castify-web</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 
 		<!-- Persistence module (brings domain transitively) -->
 		<dependency>
 			<groupId>com.castify</groupId>
 			<artifactId>castify-persistence</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 
 		<!-- Flyway - explicit dependency for auto-configuration -->
@@ -58,9 +60,13 @@
 		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
 		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
 		<plugins>
+			<!-- Enable Spring Boot repackaging for executable module -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<skip>false</skip>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
