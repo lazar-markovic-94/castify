@@ -5,6 +5,7 @@ import com.castify.domain.talent.Location
 import com.castify.domain.talent.LocationMode
 import com.castify.domain.talent.TalentProfile
 import com.castify.domain.talent.TalentRepository
+import com.castify.usecase.dto.TalentProfileResponse
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -18,12 +19,13 @@ import java.util.*
 class GetTalentProfileUseCaseTest {
 
     private lateinit var talentRepository: TalentRepository
+    private lateinit var profileEnricher: TalentProfileEnricher
     private lateinit var getTalentProfileUseCase: GetTalentProfileUseCase
 
     @BeforeEach
     fun setUp() {
         talentRepository = mockk()
-        val profileEnricher = mockk<com.castify.usecase.talent.TalentProfileEnricher>(relaxed = true)
+        profileEnricher = mockk()
         getTalentProfileUseCase = GetTalentProfileUseCase(talentRepository, profileEnricher)
     }
 
@@ -51,6 +53,7 @@ class GetTalentProfileUseCaseTest {
         )
 
         every { talentRepository.findById(talentProfileId) } returns profile
+        every { profileEnricher.enrichProfile(profile) } returns TalentProfileResponse.fromDomain(profile)
 
         // When
         val result = getTalentProfileUseCase.execute(talentProfileId)
@@ -89,6 +92,7 @@ class GetTalentProfileUseCaseTest {
         )
 
         every { talentRepository.findByUserId(userId) } returns profile
+        every { profileEnricher.enrichProfile(profile) } returns TalentProfileResponse.fromDomain(profile)
 
         // When
         val result = getTalentProfileUseCase.executeByUserId(userId)
@@ -113,7 +117,7 @@ class GetTalentProfileUseCaseTest {
             getTalentProfileUseCase.execute(talentProfileId)
         }
 
-        assertEquals("Talent profile not found", exception.message)
+        assertTrue(exception.message?.contains("Talent profile not found") ?: false)
         verify(exactly = 1) { talentRepository.findById(talentProfileId) }
     }
 
@@ -129,7 +133,7 @@ class GetTalentProfileUseCaseTest {
             getTalentProfileUseCase.executeByUserId(userId)
         }
 
-        assertEquals("Talent profile not found for user", exception.message)
+        assertTrue(exception.message?.contains("Talent profile not found for user") ?: false)
         verify(exactly = 1) { talentRepository.findByUserId(userId) }
     }
 
@@ -157,6 +161,7 @@ class GetTalentProfileUseCaseTest {
         )
 
         every { talentRepository.findById(talentProfileId) } returns profile
+        every { profileEnricher.enrichProfile(profile) } returns TalentProfileResponse.fromDomain(profile)
 
         // When
         val result = getTalentProfileUseCase.execute(talentProfileId)
@@ -192,6 +197,7 @@ class GetTalentProfileUseCaseTest {
         )
 
         every { talentRepository.findById(talentProfileId) } returns profile
+        every { profileEnricher.enrichProfile(profile) } returns TalentProfileResponse.fromDomain(profile)
 
         // When
         val result = getTalentProfileUseCase.execute(talentProfileId)

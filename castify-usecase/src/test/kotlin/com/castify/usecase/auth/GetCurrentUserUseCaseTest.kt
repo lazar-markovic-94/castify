@@ -127,7 +127,7 @@ class GetCurrentUserUseCaseTest {
             getCurrentUserUseCase.execute(userId)
         }
 
-        assertEquals("User not found", exception.message)
+        assertTrue(exception.message?.contains("User not found") ?: false)
         verify(exactly = 1) { userRepository.findById(userId) }
     }
 

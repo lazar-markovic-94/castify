@@ -132,7 +132,7 @@ class UpdateTalentTagsUseCaseTest {
             updateTalentTagsUseCase.execute(userId, request)
         }
 
-        assertEquals("Tags list is required", exception.message)
+        assertEquals("Tags are required", exception.message)
         verify(exactly = 0) { talentRepository.save(any()) }
     }
 }

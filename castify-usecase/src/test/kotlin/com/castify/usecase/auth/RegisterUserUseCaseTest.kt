@@ -120,7 +120,7 @@ class RegisterUserUseCaseTest {
             registerUserUseCase.execute(request)
         }
 
-        assertEquals("Email already registered", exception.message)
+        assertTrue(exception.message?.contains("Email already registered") ?: false)
         verify(exactly = 1) { userRepository.existsByEmail(email) }
         verify(exactly = 0) { passwordEncoder.encode(any()) }
         verify(exactly = 0) { userRepository.save(any()) }

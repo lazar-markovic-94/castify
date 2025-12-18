@@ -120,6 +120,8 @@ class CreateRatingUseCaseTest {
         val clientUserId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
+        val mockTalentProfile: TalentProfile = mockk()
+
         val request = CreateRatingRequest(
             talentProfileId = talentProfileId,
             collaborationId = null,
@@ -131,6 +133,8 @@ class CreateRatingUseCaseTest {
             reviewText = null,
             wouldWorkAgain = true
         )
+
+        every { talentRepository.findById(talentProfileId) } returns mockTalentProfile
 
         // When & Then
         assertThrows<BadRequestException> {

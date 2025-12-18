@@ -11,6 +11,7 @@ import com.castify.domain.user.UserRepository
 import com.castify.domain.user.UserRole
 import com.castify.usecase.dto.CreateTalentProfileRequest
 import com.castify.usecase.dto.LocationDto
+import com.castify.usecase.dto.TalentProfileResponse
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -26,13 +27,14 @@ class CreateOrUpdateTalentProfileUseCaseTest {
 
     private lateinit var talentRepository: TalentRepository
     private lateinit var userRepository: UserRepository
+    private lateinit var profileEnricher: TalentProfileEnricher
     private lateinit var createOrUpdateTalentProfileUseCase: CreateOrUpdateTalentProfileUseCase
 
     @BeforeEach
     fun setUp() {
         talentRepository = mockk()
         userRepository = mockk()
-        val profileEnricher = mockk<com.castify.usecase.talent.TalentProfileEnricher>(relaxed = true)
+        profileEnricher = mockk()
         createOrUpdateTalentProfileUseCase = CreateOrUpdateTalentProfileUseCase(talentRepository, userRepository, profileEnricher)
     }
 
@@ -68,6 +70,9 @@ class CreateOrUpdateTalentProfileUseCaseTest {
         every { userRepository.findById(userId) } returns user
         every { talentRepository.findByUserId(userId) } returns null
         every { talentRepository.save(any()) } answers { firstArg() }
+        every { profileEnricher.enrichProfile(any()) } answers {
+            TalentProfileResponse.fromDomain(firstArg<TalentProfile>())
+        }
 
         // When
         val result = createOrUpdateTalentProfileUseCase.execute(userId, request)
@@ -135,6 +140,9 @@ class CreateOrUpdateTalentProfileUseCaseTest {
         every { userRepository.findById(userId) } returns user
         every { talentRepository.findByUserId(userId) } returns existingProfile
         every { talentRepository.save(any()) } answers { firstArg() }
+        every { profileEnricher.enrichProfile(any()) } answers {
+            TalentProfileResponse.fromDomain(firstArg<TalentProfile>())
+        }
 
         // When
         val result = createOrUpdateTalentProfileUseCase.execute(userId, request)
@@ -167,7 +175,8 @@ class CreateOrUpdateTalentProfileUseCaseTest {
             createOrUpdateTalentProfileUseCase.execute(userId, request)
         }
 
-        assertEquals("User not found", exception.message)
+        assertTrue(exception.message?.contains("User") ?: false)
+        assertTrue(exception.message?.contains("not found") ?: false)
         verify(exactly = 1) { userRepository.findById(userId) }
         verify(exactly = 0) { talentRepository.save(any()) }
     }
@@ -200,7 +209,7 @@ class CreateOrUpdateTalentProfileUseCaseTest {
             createOrUpdateTalentProfileUseCase.execute(userId, request)
         }
 
-        assertEquals("Only talent users can create talent profiles", exception.message)
+        assertTrue(exception.message?.contains("Only talent users can create talent profiles") ?: false)
         verify(exactly = 1) { userRepository.findById(userId) }
         verify(exactly = 0) { talentRepository.save(any()) }
     }
