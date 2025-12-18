@@ -42,10 +42,14 @@
 			<plugin>
 				<groupId>org.jetbrains.kotlin</groupId>
 				<artifactId>kotlin-maven-plugin</artifactId>
+				<!-- Inherits configuration from parent -->
+			</plugin>
+			<!-- Explicitly skip Spring Boot repackaging for library module -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<sourceDirs>
-						<sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
-					</sourceDirs>
+					<skip>true</skip>
 				</configuration>
 			</plugin>
 		</plugins>

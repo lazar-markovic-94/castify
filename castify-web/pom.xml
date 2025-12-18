@@ -93,13 +93,18 @@
 				<groupId>org.jetbrains.kotlin</groupId>
 				<artifactId>kotlin-maven-plugin</artifactId>
 				<configuration>
-					<sourceDirs>
-						<sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
-					</sourceDirs>
 					<!-- Spring plugin needed for @RestController and other Spring components -->
 					<compilerPlugins>
 						<plugin>spring</plugin>
 					</compilerPlugins>
+				</configuration>
+			</plugin>
+			<!-- Explicitly skip Spring Boot repackaging for library module -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
 				</configuration>
 			</plugin>
 		</plugins>
