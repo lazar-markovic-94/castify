@@ -79,6 +79,9 @@
 				<groupId>org.jetbrains.kotlin</groupId>
 				<artifactId>kotlin-maven-plugin</artifactId>
 				<configuration>
+					<sourceDirs>
+						<sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+					</sourceDirs>
 					<compilerPlugins>
 						<plugin>spring</plugin>
 						<plugin>jpa</plugin>

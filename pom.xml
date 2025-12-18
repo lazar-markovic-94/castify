@@ -101,50 +101,7 @@
 	</dependencyManagement>
 
 	<build>
-		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
-		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
 		<plugins>
-			<plugin>
-				<groupId>org.jetbrains.kotlin</groupId>
-				<artifactId>kotlin-maven-plugin</artifactId>
-				<version>${kotlin.version}</version>
-				<executions>
-					<execution>
-						<id>compile</id>
-						<phase>compile</phase>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>test-compile</id>
-						<phase>test-compile</phase>
-						<goals>
-							<goal>test-compile</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<args>
-						<arg>-Xjsr305=strict</arg>
-					</args>
-					<compilerPlugins>
-						<plugin>spring</plugin>
-					</compilerPlugins>
-				</configuration>
-				<dependencies>
-					<dependency>
-						<groupId>org.jetbrains.kotlin</groupId>
-						<artifactId>kotlin-maven-allopen</artifactId>
-						<version>${kotlin.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>org.jetbrains.kotlin</groupId>
-						<artifactId>kotlin-maven-noarg</artifactId>
-						<version>${kotlin.version}</version>
-					</dependency>
-				</dependencies>
-			</plugin>
 
 			<!-- JaCoCo for test coverage -->
 			<plugin>
@@ -185,6 +142,77 @@
 
 		<pluginManagement>
 			<plugins>
+				<!-- Kotlin compiler plugin - child modules must define their own compilerPlugins -->
+				<plugin>
+					<groupId>org.jetbrains.kotlin</groupId>
+					<artifactId>kotlin-maven-plugin</artifactId>
+					<version>${kotlin.version}</version>
+					<executions>
+						<execution>
+							<id>compile</id>
+							<phase>process-sources</phase>
+							<goals>
+								<goal>compile</goal>
+							</goals>
+						</execution>
+						<execution>
+							<id>test-compile</id>
+							<phase>process-test-sources</phase>
+							<goals>
+								<goal>test-compile</goal>
+							</goals>
+						</execution>
+					</executions>
+					<configuration>
+						<args>
+							<arg>-Xjsr305=strict</arg>
+						</args>
+					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>org.jetbrains.kotlin</groupId>
+							<artifactId>kotlin-maven-allopen</artifactId>
+							<version>${kotlin.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.jetbrains.kotlin</groupId>
+							<artifactId>kotlin-maven-noarg</artifactId>
+							<version>${kotlin.version}</version>
+						</dependency>
+					</dependencies>
+				</plugin>
+				<!-- Maven Compiler Plugin - disable default executions to let Kotlin compile first -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.14.1</version>
+					<executions>
+						<!-- Disable default executions -->
+						<execution>
+							<id>default-compile</id>
+							<phase>none</phase>
+						</execution>
+						<execution>
+							<id>default-testCompile</id>
+							<phase>none</phase>
+						</execution>
+						<!-- Define custom executions that run after Kotlin -->
+						<execution>
+							<id>java-compile</id>
+							<phase>compile</phase>
+							<goals>
+								<goal>compile</goal>
+							</goals>
+						</execution>
+						<execution>
+							<id>java-test-compile</id>
+							<phase>test-compile</phase>
+							<goals>
+								<goal>testCompile</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
 				<!-- Configure Spring Boot plugin to be disabled by default -->
 				<!-- Only enable it explicitly in executable modules (castify-app) -->
 				<plugin>

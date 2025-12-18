@@ -60,6 +60,17 @@
 		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
 		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
 		<plugins>
+			<!-- Kotlin compiler plugin configuration -->
+			<plugin>
+				<groupId>org.jetbrains.kotlin</groupId>
+				<artifactId>kotlin-maven-plugin</artifactId>
+				<configuration>
+					<!-- Spring plugin needed for @SpringBootApplication -->
+					<compilerPlugins>
+						<plugin>spring</plugin>
+					</compilerPlugins>
+				</configuration>
+			</plugin>
 			<!-- Enable Spring Boot repackaging for executable module -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
