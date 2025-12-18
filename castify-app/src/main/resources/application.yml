@@ -2,28 +2,42 @@ spring:
   application:
     name: castify
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/castify
-    username: lazarmarkovic
-    password:
-    driver-class-name: org.postgresql.Driver
+  # Default profile is local
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
 
+  # Common datasource configuration
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # Common JPA configuration
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        jdbc:
+          batch_size: 20
+          time_zone: UTC
     defer-datasource-initialization: false
+    open-in-view: false
 
+  # Common Flyway configuration
   flyway:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
     validate-on-migrate: true
 
+  # Common multipart configuration
   servlet:
     multipart:
       enabled: true
@@ -31,21 +45,27 @@ spring:
       max-request-size: 10MB
       file-size-threshold: 0
 
+# Common server configuration
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   error:
     include-message: always
     include-binding-errors: always
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
 
+# Application-specific configuration
 app:
   jwt:
     secret: ${JWT_SECRET:your-256-bit-secret-key-change-this-in-production-please-make-it-long-enough}
-    expiration-ms: 86400000  # 24 hours
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}  # 24 hours
 
 file:
   upload:
     dir: ${UPLOAD_DIR:uploads}
 
+# Common Springdoc configuration
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -54,13 +74,8 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
 
+# Common logging pattern
 logging:
-  level:
-    com.castify: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.web.servlet.mvc: DEBUG
-    org.springframework.web.servlet.DispatcherServlet: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.flywaydb: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
