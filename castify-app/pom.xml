@@ -71,6 +71,10 @@
 					</compilerPlugins>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
 			<!-- Enable Spring Boot repackaging for executable module -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

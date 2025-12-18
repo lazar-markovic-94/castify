@@ -45,12 +45,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-maven-v2-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            ${{ runner.os }}-maven-
+            ${{ runner.os }}-maven-v2-
 
       - name: Run tests
-        run: mvn clean install -B -U
+        run: mvn clean install -B -U -V
         env:
           SPRING_PROFILES_ACTIVE: local
           DB_URL: jdbc:postgresql://localhost:5432/castify_test
@@ -77,9 +77,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-maven-v2-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            ${{ runner.os }}-maven-
+            ${{ runner.os }}-maven-v2-
 
       - name: Build with Maven
-        run: mvn clean package -DskipTests -B
+        run: mvn clean package -DskipTests -B -V
