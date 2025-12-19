@@ -18,9 +18,9 @@ interface TalentStatisticsJpaRepository : JpaRepository<TalentStatisticsEntity, 
     fun findByTalentProfileIdIn(talentProfileIds: List<UUID>): List<TalentStatisticsEntity>
 
     /**
-     * Find talents by tier
+     * Find talents by performance tier
      */
-    fun findByTier(tier: TalentTier): List<TalentStatisticsEntity>
+    fun findByPerformanceTier(performanceTier: TalentTier): List<TalentStatisticsEntity>
 
     /**
      * Find talents with minimum average rating

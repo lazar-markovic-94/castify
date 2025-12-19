@@ -36,7 +36,7 @@ class TalentStatisticsRepositoryAdapter(
     }
 
     override fun findByTier(tier: TalentTier): List<TalentStatistics> {
-        return jpaRepository.findByTier(tier)
+        return jpaRepository.findByPerformanceTier(tier)
             .map { it.toDomain() }
     }
 

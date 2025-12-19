@@ -1,37 +1,11 @@
 package com.castify.persistence.jpa
 
-import com.castify.persistence.entity.*
+import com.castify.persistence.entity.ConversationEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.util.*
-
-@Repository
-interface UserJpaRepository : JpaRepository<UserEntity, UUID> {
-    fun findByEmail(email: String): UserEntity?
-    fun existsByEmail(email: String): Boolean
-}
-
-@Repository
-interface TalentProfileJpaRepository : JpaRepository<TalentProfileEntity, UUID> {
-    fun findByUserId(userId: UUID): TalentProfileEntity?
-}
-
-@Repository
-interface ClientOrgJpaRepository : JpaRepository<ClientOrgEntity, UUID> {
-    fun findByUserId(userId: UUID): ClientOrgEntity?
-}
-
-@Repository
-interface MediaAssetJpaRepository : JpaRepository<MediaAssetEntity, UUID> {
-    fun findByUploadedByUserId(uploadedByUserId: UUID): List<MediaAssetEntity>
-}
-
-@Repository
-interface PortfolioItemJpaRepository : JpaRepository<PortfolioItemEntity, UUID> {
-    fun findByTalentProfileId(talentProfileId: UUID): List<PortfolioItemEntity>
-}
 
 @Repository
 interface ConversationJpaRepository : JpaRepository<ConversationEntity, UUID> {
@@ -55,9 +29,4 @@ interface ConversationJpaRepository : JpaRepository<ConversationEntity, UUID> {
         @Param("talentUserId") talentUserId: UUID,
         @Param("clientUserId") clientUserId: UUID
     ): ConversationEntity?
-}
-
-@Repository
-interface MessageJpaRepository : JpaRepository<MessageEntity, UUID> {
-    fun findByConversationIdOrderBySentAtAsc(conversationId: UUID): List<MessageEntity>
 }
