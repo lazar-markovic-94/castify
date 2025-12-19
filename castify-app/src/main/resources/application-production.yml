@@ -71,6 +71,10 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}  # 24 hours
+  cors:
+    # CRITICAL: Set production origins via ALLOWED_ORIGINS environment variable
+    # Example: ALLOWED_ORIGINS=https://castify.com,https://app.castify.com,https://www.castify.com
+    allowed-origins: ${ALLOWED_ORIGINS}
 
 # Spring Boot Actuator for production monitoring (if enabled)
 management:
