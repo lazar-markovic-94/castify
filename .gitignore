@@ -204,7 +204,7 @@ coverage/
 
 ### Application Specific ###
 uploads/
-media/
+/media/
 temp/
 cache/
 

@@ -1,0 +1,89 @@
+# =============================================================================
+# Backend .dockerignore
+# Excludes files from Docker build context to speed up builds
+# =============================================================================
+
+# Build output directories
+**/target/
+**/build/
+**/out/
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Environment files (secrets should never be in image)
+.env
+.env.*
+!.env.*.example
+
+# Documentation (not needed in runtime)
+*.md
+!README.md
+docs/
+documentation/
+
+# Test files (not needed in production image)
+**/src/test/
+**/*Test.java
+**/*Test.kt
+
+# Local development
+uploads/
+logs/
+*.log
+*.tmp
+
+# Maven wrapper jar (we copy mvnw but download wrapper in Dockerfile)
+.mvn/wrapper/maven-wrapper.jar
+
+# Docker files themselves
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+Jenkinsfile
+.circleci/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Database files (shouldn't be in repo anyway)
+*.db
+*.sqlite
+*.sql
+
+# Temporary files
+tmp/
+temp/
+*.cache
+
+# Archives
+*.zip
+*.tar
+*.gz
+*.tgz

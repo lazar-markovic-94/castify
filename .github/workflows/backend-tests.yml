@@ -1,0 +1,48 @@
+# =============================================================================
+# Backend Unit Tests - Run on Pull Requests
+# Simple workflow to run unit tests before merging
+# =============================================================================
+
+name: Backend Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**'
+      - '.github/workflows/backend-tests.yml'
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Java 21
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Build and run unit tests
+      - name: Build and run tests
+        run: ./mvnw clean install -B
+
+      # Show test results summary
+      - name: Test Summary
+        if: always()
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "✅ All tests passed!"
+          else
+            echo "❌ Tests failed. Check logs above."
+            exit 1
+          fi
