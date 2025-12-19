@@ -7,7 +7,7 @@ import java.util.*
 
 @Entity
 @Table(name = "talent_rating")
-data class TalentRatingEntity(
+class TalentRatingEntity(
     @Id
     @Column(name = "rating_id")
     val ratingId: UUID = UUID.randomUUID(),
@@ -46,8 +46,32 @@ data class TalentRatingEntity(
     val createdAt: Instant = Instant.now(),
 
     @Column(name = "is_verified", nullable = false)
-    val isVerified: Boolean = false
+    val isVerified: Boolean = false,
+
+    @Version
+    @Column(name = "version", nullable = false)
+    var version: Long = 0,
+
+    @Column(name = "verified_by")
+    val verifiedBy: UUID? = null,
+
+    @Column(name = "verified_at")
+    val verifiedAt: Instant? = null
 ) {
+    /**
+     * JPA entities must have equals/hashCode based only on ID to work correctly
+     * with lazy loading, proxies, and collections
+     */
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is TalentRatingEntity) return false
+        return ratingId == other.ratingId
+    }
+
+    override fun hashCode(): Int = ratingId.hashCode()
+
+    override fun toString(): String =
+        "TalentRatingEntity(ratingId=$ratingId, talentProfileId=$talentProfileId, overallRating=$overallRating)"
     /**
      * Convert JPA entity to domain model
      */

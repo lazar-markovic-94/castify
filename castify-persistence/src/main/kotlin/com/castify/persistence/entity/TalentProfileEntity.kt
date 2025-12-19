@@ -70,7 +70,20 @@ class TalentProfileEntity(
     var createdAt: Instant = Instant.now(),
 
     @Column(name = "updated_at", nullable = false)
-    var updatedAt: Instant = Instant.now()
+    var updatedAt: Instant = Instant.now(),
+
+    @Version
+    @Column(name = "version", nullable = false)
+    var version: Long = 0,
+
+    @Column(name = "verified_by")
+    var verifiedBy: UUID? = null,
+
+    @Column(name = "verified_at")
+    var verifiedAt: Instant? = null,
+
+    @Column(name = "deleted_at")
+    var deletedAt: Instant? = null
 ) {
     @OneToMany(mappedBy = "talentProfile", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var languages: MutableSet<TalentLanguageEntity> = mutableSetOf()

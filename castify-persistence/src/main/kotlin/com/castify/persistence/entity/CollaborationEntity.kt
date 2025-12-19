@@ -9,54 +9,81 @@ import java.util.*
 
 @Entity
 @Table(name = "collaboration")
-data class CollaborationEntity(
+class CollaborationEntity(
     @Id
     @Column(name = "collaboration_id")
     val collaborationId: UUID = UUID.randomUUID(),
 
     @Column(name = "client_user_id", nullable = false)
-    val clientUserId: UUID,
+    var clientUserId: UUID,
 
     @Column(name = "talent_profile_id", nullable = false)
-    val talentProfileId: UUID,
+    var talentProfileId: UUID,
 
     @Column(name = "title", nullable = false)
-    val title: String,
+    var title: String,
 
     @Column(name = "description", columnDefinition = "TEXT", nullable = false)
-    val description: String,
+    var description: String,
 
     @Column(name = "budget", precision = 10, scale = 2)
-    val budget: BigDecimal? = null,
+    var budget: BigDecimal? = null,
 
     @Column(name = "start_date")
-    val startDate: Instant? = null,
+    var startDate: Instant? = null,
 
     @Column(name = "end_date")
-    val endDate: Instant? = null,
+    var endDate: Instant? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    val status: CollaborationStatus,
+    var status: CollaborationStatus,
 
     @Column(name = "proposed_at", nullable = false)
-    val proposedAt: Instant,
+    var proposedAt: Instant,
 
     @Column(name = "responded_at")
-    val respondedAt: Instant? = null,
+    var respondedAt: Instant? = null,
 
     @Column(name = "completed_at")
-    val completedAt: Instant? = null,
+    var completedAt: Instant? = null,
 
     @Column(name = "notes", columnDefinition = "TEXT")
-    val notes: String? = null,
+    var notes: String? = null,
 
     @Column(name = "created_at", nullable = false)
-    val createdAt: Instant = Instant.now(),
+    var createdAt: Instant = Instant.now(),
 
     @Column(name = "updated_at", nullable = false)
-    val updatedAt: Instant = Instant.now()
+    var updatedAt: Instant = Instant.now(),
+
+    @Version
+    @Column(name = "version", nullable = false)
+    var version: Long = 0,
+
+    @Column(name = "created_by")
+    var createdBy: UUID? = null,
+
+    @Column(name = "updated_by")
+    var updatedBy: UUID? = null,
+
+    @Column(name = "deleted_at")
+    var deletedAt: Instant? = null
 ) {
+    /**
+     * JPA entities must have equals/hashCode based only on ID to work correctly
+     * with lazy loading, proxies, and collections
+     */
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CollaborationEntity) return false
+        return collaborationId == other.collaborationId
+    }
+
+    override fun hashCode(): Int = collaborationId.hashCode()
+
+    override fun toString(): String =
+        "CollaborationEntity(collaborationId=$collaborationId, title='$title', status=$status)"
     /**
      * Convert JPA entity to domain model
      */

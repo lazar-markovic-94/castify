@@ -3,65 +3,84 @@ package com.castify.persistence.entity
 import com.castify.domain.rating.TalentStatistics
 import com.castify.domain.rating.TalentTier
 import jakarta.persistence.*
+import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
 
 @Entity
 @Table(name = "talent_statistics")
-data class TalentStatisticsEntity(
+class TalentStatisticsEntity(
     @Id
     @Column(name = "talent_profile_id")
     val talentProfileId: UUID,
 
     @Column(name = "average_rating", nullable = false)
-    val averageRating: Double = 0.0,
+    var averageRating: Double = 0.0,
 
     @Column(name = "total_ratings", nullable = false)
-    val totalRatings: Int = 0,
+    var totalRatings: Int = 0,
 
     @Column(name = "average_professionalism_rating", nullable = false)
-    val averageProfessionalismRating: Double = 0.0,
+    var averageProfessionalismRating: Double = 0.0,
 
     @Column(name = "average_quality_rating", nullable = false)
-    val averageQualityRating: Double = 0.0,
+    var averageQualityRating: Double = 0.0,
 
     @Column(name = "average_communication_rating", nullable = false)
-    val averageCommunicationRating: Double = 0.0,
+    var averageCommunicationRating: Double = 0.0,
 
     @Column(name = "average_timeliness_rating", nullable = false)
-    val averageTimelinessRating: Double = 0.0,
+    var averageTimelinessRating: Double = 0.0,
 
     @Column(name = "total_collaborations", nullable = false)
-    val totalCollaborations: Int = 0,
+    var totalCollaborations: Int = 0,
 
     @Column(name = "completed_collaborations", nullable = false)
-    val completedCollaborations: Int = 0,
+    var completedCollaborations: Int = 0,
 
     @Column(name = "canceled_collaborations", nullable = false)
-    val canceledCollaborations: Int = 0,
+    var canceledCollaborations: Int = 0,
 
     @Column(name = "success_rate", nullable = false)
-    val successRate: Double = 0.0,
+    var successRate: Double = 0.0,
 
-    @Column(name = "total_earnings", nullable = false)
-    val totalEarnings: Double = 0.0,
+    @Column(name = "total_earnings", nullable = false, precision = 12, scale = 2)
+    var totalEarnings: BigDecimal = BigDecimal.ZERO,
 
     @Column(name = "average_response_time_hours")
-    val averageResponseTimeHours: Double? = null,
+    var averageResponseTimeHours: Double? = null,
 
     @Column(name = "profile_completeness", nullable = false)
-    val profileCompleteness: Int = 0,
+    var profileCompleteness: Int = 0,
 
     @Column(name = "would_work_again_percentage", nullable = false)
-    val wouldWorkAgainPercentage: Double = 0.0,
+    var wouldWorkAgainPercentage: Double = 0.0,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tier", nullable = false, length = 20)
-    val tier: TalentTier = TalentTier.BRONZE,
+    @Column(name = "performance_tier", nullable = false, length = 20)
+    var performanceTier: TalentTier = TalentTier.BRONZE,
 
     @Column(name = "last_updated", nullable = false)
-    val lastUpdated: Instant = Instant.now()
+    var lastUpdated: Instant = Instant.now(),
+
+    @Version
+    @Column(name = "version", nullable = false)
+    var version: Long = 0
 ) {
+    /**
+     * JPA entities must have equals/hashCode based only on ID to work correctly
+     * with lazy loading, proxies, and collections
+     */
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is TalentStatisticsEntity) return false
+        return talentProfileId == other.talentProfileId
+    }
+
+    override fun hashCode(): Int = talentProfileId.hashCode()
+
+    override fun toString(): String =
+        "TalentStatisticsEntity(talentProfileId=$talentProfileId, averageRating=$averageRating, tier=$performanceTier)"
     /**
      * Convert JPA entity to domain model
      */
@@ -78,11 +97,11 @@ data class TalentStatisticsEntity(
             completedCollaborations = completedCollaborations,
             canceledCollaborations = canceledCollaborations,
             successRate = successRate,
-            totalEarnings = totalEarnings,
+            totalEarnings = totalEarnings.toDouble(),
             averageResponseTimeHours = averageResponseTimeHours,
             profileCompleteness = profileCompleteness,
             wouldWorkAgainPercentage = wouldWorkAgainPercentage,
-            tier = tier,
+            tier = performanceTier,
             lastUpdated = lastUpdated
         )
     }
@@ -104,11 +123,11 @@ data class TalentStatisticsEntity(
                 completedCollaborations = statistics.completedCollaborations,
                 canceledCollaborations = statistics.canceledCollaborations,
                 successRate = statistics.successRate,
-                totalEarnings = statistics.totalEarnings,
+                totalEarnings = BigDecimal.valueOf(statistics.totalEarnings),
                 averageResponseTimeHours = statistics.averageResponseTimeHours,
                 profileCompleteness = statistics.profileCompleteness,
                 wouldWorkAgainPercentage = statistics.wouldWorkAgainPercentage,
-                tier = statistics.tier,
+                performanceTier = statistics.tier,
                 lastUpdated = statistics.lastUpdated
             )
         }

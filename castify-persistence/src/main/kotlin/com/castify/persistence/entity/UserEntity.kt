@@ -33,7 +33,23 @@ class UserEntity(
     var createdAt: Instant = Instant.now(),
 
     @Column(name = "updated_at", nullable = false)
-    var updatedAt: Instant = Instant.now()
+    var updatedAt: Instant = Instant.now(),
+
+    @Version
+    @Column(name = "version", nullable = false)
+    var version: Long = 0,
+
+    @Column(name = "created_by")
+    var createdBy: UUID? = null,
+
+    @Column(name = "updated_by")
+    var updatedBy: UUID? = null,
+
+    @Column(name = "deleted_at")
+    var deletedAt: Instant? = null,
+
+    @Column(name = "deleted_by")
+    var deletedBy: UUID? = null
 ) {
     fun toDomain(): User = User(
         userId = userId,

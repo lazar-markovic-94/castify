@@ -24,11 +24,35 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        show_sql: false  # Use logging instead for production
+        use_sql_comments: true
         jdbc:
           batch_size: 20
           time_zone: UTC
+          fetch_size: 50
+        order_inserts: true
+        order_updates: true
+        # Optimistic locking settings
+        jpa:
+          compliance:
+            global_id_generators: true
+        # Second-level cache (optional - configure if needed)
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+        # Connection isolation level
+        connection:
+          isolation: 2  # READ_COMMITTED (default for PostgreSQL)
+        # Query optimization
+        query:
+          in_clause_parameter_padding: true
+          fail_on_pagination_over_collection_fetch: true
+        # Statistics for monitoring
+        generate_statistics: false  # Set true in dev/test only
     defer-datasource-initialization: false
     open-in-view: false
+    # Show parameter binding in logs (dev only)
+    show-sql: false
 
   # Common Flyway configuration
   flyway:
