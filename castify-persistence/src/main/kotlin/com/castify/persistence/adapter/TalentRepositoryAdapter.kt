@@ -34,7 +34,7 @@ class TalentRepositoryAdapter(
     }
 
     override fun findByUserId(userId: UUID): TalentProfile? {
-        return talentProfileJpaRepository.findByUserId(userId)?.toDomain()
+        return talentProfileJpaRepository.findByUserIdWithCollections(userId)?.toDomain()
     }
 
     override fun search(searchCriteria: TalentSearchCriteria): List<TalentProfile> {
