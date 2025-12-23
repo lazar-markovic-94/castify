@@ -11,7 +11,9 @@ data class CreateTalentProfileRequest(
     @field:NotBlank(message = "Full name is required")
     val fullName: String?,
     val bio: String? = null,
-    val location: LocationDto?,
+    val locationMode: LocationMode? = LocationMode.SPECIFIC,
+    val primaryLocation: PrimaryLocationDto?,
+    val geoAreas: Set<GeoAreaDto>? = emptySet(),
     val profileImageUrl: String? = null
 )
 
@@ -21,27 +23,27 @@ data class UpdateTalentProfileRequest(
     val profileImageUrl: String? = null
 )
 
-data class LocationDto(
-    val mode: LocationMode?,
-    val latitude: BigDecimal? = null,
-    val longitude: BigDecimal? = null,
-    val city: String? = null,
-    val country: String? = null
+data class PrimaryLocationDto(
+    val latitude: BigDecimal?,
+    val longitude: BigDecimal?,
+    val city: String?,
+    val country: String?
 ) {
-    fun toDomain(): Location {
-        val locationMode = requireNotNull(mode) { "Location mode is required" }
-        return Location(
-            mode = locationMode,
-            latitude = latitude,
-            longitude = longitude,
-            city = city,
-            country = country
+    fun toDomain(): PrimaryLocation {
+        val lat = requireNotNull(latitude) { "Latitude is required" }
+        val lon = requireNotNull(longitude) { "Longitude is required" }
+        val cityValue = requireNotNull(city) { "City is required" }
+        val countryValue = requireNotNull(country) { "Country is required" }
+        return PrimaryLocation(
+            latitude = lat,
+            longitude = lon,
+            city = cityValue,
+            country = countryValue
         )
     }
 
     companion object {
-        fun fromDomain(location: Location): LocationDto = LocationDto(
-            mode = location.mode,
+        fun fromDomain(location: PrimaryLocation): PrimaryLocationDto = PrimaryLocationDto(
             latitude = location.latitude,
             longitude = location.longitude,
             city = location.city,
@@ -50,8 +52,47 @@ data class LocationDto(
     }
 }
 
-data class UpdateLocationRequest(
-    val location: LocationDto?
+data class GeoAreaDto(
+    val city: String?,
+    val country: String?,
+    val isPrimary: Boolean = false
+) {
+    fun toDomain(): GeoArea {
+        val cityValue = requireNotNull(city) { "City is required" }
+        val countryValue = requireNotNull(country) { "Country is required" }
+        return GeoArea(
+            city = cityValue,
+            country = countryValue,
+            isPrimary = isPrimary
+        )
+    }
+
+    companion object {
+        fun fromDomain(geoArea: GeoArea): GeoAreaDto = GeoAreaDto(
+            city = geoArea.city,
+            country = geoArea.country,
+            isPrimary = geoArea.isPrimary
+        )
+    }
+}
+
+data class UpdatePrimaryLocationRequest(
+    val primaryLocation: PrimaryLocationDto?
+)
+
+data class UpdateGeoAreasRequest(
+    val geoAreas: Set<GeoAreaDto>?
+)
+
+data class AddGeoAreaRequest(
+    val city: String?,
+    val country: String?,
+    val isPrimary: Boolean = false
+)
+
+data class RemoveGeoAreaRequest(
+    val city: String?,
+    val country: String?
 )
 
 data class UpdateLanguagesRequest(
@@ -130,7 +171,9 @@ data class TalentProfileResponse(
     val userId: UUID,
     val fullName: String,
     val bio: String?,
-    val location: LocationDto,
+    val locationMode: LocationMode,
+    val primaryLocation: PrimaryLocationDto?,
+    val geoAreas: Set<GeoAreaDto>,
     val languages: Set<String>,
     val tags: Set<String>,
     val capabilities: UpdateCapabilitiesRequest,
@@ -152,7 +195,9 @@ data class TalentProfileResponse(
             userId = talentProfile.userId,
             fullName = talentProfile.fullName,
             bio = talentProfile.bio,
-            location = LocationDto.fromDomain(talentProfile.location),
+            locationMode = talentProfile.locationMode,
+            primaryLocation = talentProfile.primaryLocation?.let { PrimaryLocationDto.fromDomain(it) },
+            geoAreas = talentProfile.geoAreas.map { GeoAreaDto.fromDomain(it) }.toSet(),
             languages = talentProfile.languages,
             tags = talentProfile.tags,
             capabilities = UpdateCapabilitiesRequest.fromDomain(talentProfile.capabilities),

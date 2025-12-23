@@ -7,10 +7,10 @@ import com.castify.domain.rating.TalentRatingRepository
 import com.castify.domain.rating.TalentStatistics
 import com.castify.domain.rating.TalentStatisticsRepository
 import com.castify.domain.rating.TalentTier
-import com.castify.domain.talent.Location
 import com.castify.domain.talent.LocationMode
 import com.castify.domain.talent.TalentProfile
 import com.castify.domain.talent.TalentRepository
+import com.castify.usecase.TestHelpers
 import com.castify.usecase.dto.CreateRatingRequest
 import io.mockk.every
 import io.mockk.mockk
@@ -43,13 +43,14 @@ class CreateRatingUseCaseTest {
         val clientUserId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
-        val talentProfile = TalentProfile(
+        val talentProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = UUID.randomUUID(),
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val statistics = TalentStatistics.createInitial(talentProfileId, 50)
@@ -66,7 +67,7 @@ class CreateRatingUseCaseTest {
             wouldWorkAgain = true
         )
 
-        every { talentRepository.findById(talentProfileId) } returns talentProfile
+        every { talentRepository.existsById(talentProfileId) } returns true
         every { ratingRepository.findByTalentProfileIdAndClientUserIdAndCollaborationId(talentProfileId, clientUserId, request.collaborationId!!) } returns null
         every { statisticsRepository.findByTalentProfileId(talentProfileId) } returns statistics
         every { ratingRepository.save(any()) } answers { firstArg() }
@@ -103,7 +104,7 @@ class CreateRatingUseCaseTest {
             wouldWorkAgain = true
         )
 
-        every { talentRepository.findById(talentProfileId) } returns null
+        every { talentRepository.existsById(talentProfileId) } returns false
 
         // When & Then
         val exception = assertThrows<ResourceNotFoundException> {
@@ -134,7 +135,7 @@ class CreateRatingUseCaseTest {
             wouldWorkAgain = true
         )
 
-        every { talentRepository.findById(talentProfileId) } returns mockTalentProfile
+        every { talentRepository.existsById(talentProfileId) } returns true
 
         // When & Then
         assertThrows<BadRequestException> {
@@ -148,13 +149,14 @@ class CreateRatingUseCaseTest {
         val clientUserId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
-        val talentProfile = TalentProfile(
+        val talentProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = UUID.randomUUID(),
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val request = CreateRatingRequest(
@@ -169,7 +171,7 @@ class CreateRatingUseCaseTest {
             wouldWorkAgain = true
         )
 
-        every { talentRepository.findById(talentProfileId) } returns talentProfile
+        every { talentRepository.existsById(talentProfileId) } returns true
         every { statisticsRepository.findByTalentProfileId(talentProfileId) } returns null
         every { ratingRepository.save(any()) } answers { firstArg() }
         every { statisticsRepository.save(any()) } answers { firstArg() }
@@ -188,13 +190,14 @@ class CreateRatingUseCaseTest {
         val clientUserId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
-        val talentProfile = TalentProfile(
+        val talentProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = UUID.randomUUID(),
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val statistics = TalentStatistics.createInitial(talentProfileId, 50)
@@ -211,7 +214,7 @@ class CreateRatingUseCaseTest {
             wouldWorkAgain = false
         )
 
-        every { talentRepository.findById(talentProfileId) } returns talentProfile
+        every { talentRepository.existsById(talentProfileId) } returns true
         every { statisticsRepository.findByTalentProfileId(talentProfileId) } returns statistics
         every { ratingRepository.save(any()) } answers { firstArg() }
         every { statisticsRepository.save(any()) } answers { firstArg() }

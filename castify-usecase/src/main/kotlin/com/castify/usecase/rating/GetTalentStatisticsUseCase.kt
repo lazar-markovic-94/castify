@@ -31,8 +31,9 @@ class GetTalentStatisticsUseCase(
             logger.info("Fetching statistics for talent: $talentProfileId")
 
             // Verify talent exists
-            talentRepository.findById(talentProfileId)
-                ?: throw ResourceNotFoundException("Talent profile not found: $talentProfileId")
+            if (!talentRepository.existsById(talentProfileId)) {
+                throw ResourceNotFoundException("Talent profile not found: $talentProfileId")
+            }
 
             val statistics = statisticsRepository.findByTalentProfileId(talentProfileId)
                 ?: TalentStatistics.createInitial(talentProfileId, 0)

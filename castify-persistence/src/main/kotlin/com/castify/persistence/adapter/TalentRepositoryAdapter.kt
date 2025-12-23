@@ -37,6 +37,10 @@ class TalentRepositoryAdapter(
         return talentProfileJpaRepository.findByUserId(userId)?.toDomain()
     }
 
+    override fun existsById(talentProfileId: UUID): Boolean {
+        return talentProfileJpaRepository.existsById(talentProfileId)
+    }
+
     override fun search(searchCriteria: TalentSearchCriteria): List<TalentProfile> {
         val cb: CriteriaBuilder = entityManager.criteriaBuilder
         val query = cb.createQuery(TalentProfileEntity::class.java)
@@ -89,19 +93,18 @@ class TalentRepositoryAdapter(
             }
         }
 
-        // Apply location filter with Haversine distance
+        // Apply location filter with Haversine distance using primary location
         if (searchCriteria.latitude != null && searchCriteria.longitude != null && searchCriteria.radiusKm != null) {
             val searchLat = searchCriteria.latitude!!.toDouble()
             val searchLon = searchCriteria.longitude!!.toDouble()
             val radiusKm = searchCriteria.radiusKm!!
 
             results = results.filter { profile ->
-                val lat = profile.location.latitude
-                val lon = profile.location.longitude
+                val primaryLocation = profile.primaryLocation
 
-                if (lat != null && lon != null) {
-                    val profileLat = lat.toDouble()
-                    val profileLon = lon.toDouble()
+                if (primaryLocation != null) {
+                    val profileLat = primaryLocation.latitude.toDouble()
+                    val profileLon = primaryLocation.longitude.toDouble()
                     val distance = calculateHaversineDistance(searchLat, searchLon, profileLat, profileLon)
                     distance <= radiusKm
                 } else {

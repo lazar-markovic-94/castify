@@ -78,7 +78,7 @@ class GetPortfolioItemsUseCaseTest {
             addedAt = Instant.now()
         )
 
-        every { talentRepository.findById(talentProfileId) } returns mockTalentProfile
+        every { talentRepository.existsById(talentProfileId) } returns true
         every { mediaRepository.findPortfolioItemsByTalent(talentProfileId) } returns listOf(
             portfolioItem1,
             portfolioItem2
@@ -98,7 +98,7 @@ class GetPortfolioItemsUseCaseTest {
         assertEquals(mediaAsset2.mediaAssetId, result[0].mediaAsset.mediaAssetId)
         assertEquals(mediaAsset1.mediaAssetId, result[1].mediaAsset.mediaAssetId)
 
-        verify(exactly = 1) { talentRepository.findById(talentProfileId) }
+        verify(exactly = 1) { talentRepository.existsById(talentProfileId) }
         verify(exactly = 1) { mediaRepository.findPortfolioItemsByTalent(talentProfileId) }
         verify(exactly = 1) { mediaRepository.findMediaAssetById(mediaAsset1.mediaAssetId) }
         verify(exactly = 1) { mediaRepository.findMediaAssetById(mediaAsset2.mediaAssetId) }
@@ -110,7 +110,7 @@ class GetPortfolioItemsUseCaseTest {
         val talentProfileId = UUID.randomUUID()
         val mockTalentProfile: TalentProfile = mockk()
 
-        every { talentRepository.findById(talentProfileId) } returns mockTalentProfile
+        every { talentRepository.existsById(talentProfileId) } returns true
         every { mediaRepository.findPortfolioItemsByTalent(talentProfileId) } returns emptyList()
 
         // When
@@ -120,7 +120,7 @@ class GetPortfolioItemsUseCaseTest {
         assertNotNull(result)
         assertTrue(result.isEmpty())
 
-        verify(exactly = 1) { talentRepository.findById(talentProfileId) }
+        verify(exactly = 1) { talentRepository.existsById(talentProfileId) }
         verify(exactly = 1) { mediaRepository.findPortfolioItemsByTalent(talentProfileId) }
     }
 
@@ -129,7 +129,7 @@ class GetPortfolioItemsUseCaseTest {
         // Given
         val talentProfileId = UUID.randomUUID()
 
-        every { talentRepository.findById(talentProfileId) } returns null
+        every { talentRepository.existsById(talentProfileId) } returns false
 
         // When & Then
         val exception = assertThrows<IllegalArgumentException> {
@@ -137,7 +137,7 @@ class GetPortfolioItemsUseCaseTest {
         }
 
         assertEquals("Talent profile not found", exception.message)
-        verify(exactly = 1) { talentRepository.findById(talentProfileId) }
+        verify(exactly = 1) { talentRepository.existsById(talentProfileId) }
         verify(exactly = 0) { mediaRepository.findPortfolioItemsByTalent(any()) }
     }
 
@@ -170,7 +170,7 @@ class GetPortfolioItemsUseCaseTest {
             displayOrder = 2
         )
 
-        every { talentRepository.findById(talentProfileId) } returns mockTalentProfile
+        every { talentRepository.existsById(talentProfileId) } returns true
         every { mediaRepository.findPortfolioItemsByTalent(talentProfileId) } returns listOf(
             portfolioItem1,
             portfolioItem2
@@ -186,7 +186,7 @@ class GetPortfolioItemsUseCaseTest {
         assertEquals(1, result.size)
         assertEquals(mediaAsset1.mediaAssetId, result[0].mediaAsset.mediaAssetId)
 
-        verify(exactly = 1) { talentRepository.findById(talentProfileId) }
+        verify(exactly = 1) { talentRepository.existsById(talentProfileId) }
         verify(exactly = 1) { mediaRepository.findPortfolioItemsByTalent(talentProfileId) }
     }
 
@@ -216,7 +216,7 @@ class GetPortfolioItemsUseCaseTest {
             displayOrder = 1
         )
 
-        every { talentRepository.findById(talentProfileId) } returns mockTalentProfile
+        every { talentRepository.existsById(talentProfileId) } returns true
         every { mediaRepository.findPortfolioItemsByTalent(talentProfileId) } returns listOf(portfolioItem)
         every { mediaRepository.findMediaAssetById(mediaAsset.mediaAssetId) } returns mediaAsset
 
@@ -282,7 +282,7 @@ class GetPortfolioItemsUseCaseTest {
             displayOrder = 1 // Same display order
         )
 
-        every { talentRepository.findById(talentProfileId) } returns mockTalentProfile
+        every { talentRepository.existsById(talentProfileId) } returns true
         every { mediaRepository.findPortfolioItemsByTalent(talentProfileId) } returns listOf(
             portfolioItem1,
             portfolioItem2

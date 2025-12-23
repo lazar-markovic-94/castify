@@ -9,7 +9,9 @@ data class TalentProfile(
     val userId: UUID,
     val fullName: String,
     val bio: String? = null,
-    val location: Location,
+    val locationMode: LocationMode = LocationMode.SPECIFIC,
+    val primaryLocation: PrimaryLocation? = null,
+    val geoAreas: Set<GeoArea> = emptySet(),
     val languages: Set<String> = emptySet(),
     val tags: Set<String> = emptySet(),
     val capabilities: TalentCapabilities = TalentCapabilities(),
@@ -21,11 +23,44 @@ data class TalentProfile(
 ) {
     init {
         require(fullName.isNotBlank()) { "Full name cannot be blank" }
+        if (locationMode == LocationMode.SPECIFIC || locationMode == LocationMode.HYBRID) {
+            require(primaryLocation != null) {
+                "Primary location is required for SPECIFIC and HYBRID location modes"
+            }
+        }
+        require(geoAreas.count { it.isPrimary } <= 1) {
+            "Only one geo area can be marked as primary"
+        }
     }
 
     fun updateBio(newBio: String?): TalentProfile = copy(bio = newBio, updatedAt = Instant.now())
 
-    fun updateLocation(newLocation: Location): TalentProfile = copy(location = newLocation, updatedAt = Instant.now())
+    fun updateLocationMode(newMode: LocationMode): TalentProfile = copy(locationMode = newMode, updatedAt = Instant.now())
+
+    fun updatePrimaryLocation(newLocation: PrimaryLocation): TalentProfile =
+        copy(primaryLocation = newLocation, updatedAt = Instant.now())
+
+    fun addGeoArea(geoArea: GeoArea): TalentProfile {
+        require(!geoAreas.any { it.city == geoArea.city && it.country == geoArea.country }) {
+            "Geo area ${geoArea.city}, ${geoArea.country} already exists"
+        }
+        val updatedAreas = if (geoArea.isPrimary) {
+            geoAreas.map { it.copy(isPrimary = false) }.toSet() + geoArea
+        } else {
+            geoAreas + geoArea
+        }
+        return copy(geoAreas = updatedAreas, updatedAt = Instant.now())
+    }
+
+    fun removeGeoArea(city: String, country: String): TalentProfile =
+        copy(geoAreas = geoAreas.filterNot { it.city == city && it.country == country }.toSet(), updatedAt = Instant.now())
+
+    fun updateGeoAreas(newGeoAreas: Set<GeoArea>): TalentProfile {
+        require(newGeoAreas.count { it.isPrimary } <= 1) {
+            "Only one geo area can be marked as primary"
+        }
+        return copy(geoAreas = newGeoAreas, updatedAt = Instant.now())
+    }
 
     fun updateLanguages(newLanguages: Set<String>): TalentProfile = copy(languages = newLanguages, updatedAt = Instant.now())
 
@@ -54,18 +89,39 @@ data class TalentProfile(
     fun isVerified(): Boolean = verificationStatus == VerificationStatus.VERIFIED
 }
 
-data class Location(
-    val mode: LocationMode,
-    val latitude: BigDecimal? = null,
-    val longitude: BigDecimal? = null,
-    val city: String? = null,
-    val country: String? = null
+/**
+ * Represents a geographical area where talent provides services.
+ * Multiple geo areas can be specified to indicate coverage across different cities.
+ */
+data class GeoArea(
+    val city: String,
+    val country: String,
+    val isPrimary: Boolean = false
 ) {
     init {
-        if (mode == LocationMode.SPECIFIC) {
-            require(latitude != null && longitude != null) {
-                "Latitude and longitude are required for specific location mode"
-            }
+        require(city.isNotBlank()) { "City cannot be blank" }
+        require(country.isNotBlank()) { "Country cannot be blank" }
+    }
+}
+
+/**
+ * Primary location with coordinates for distance-based search.
+ * Represents the main location where talent is based.
+ */
+data class PrimaryLocation(
+    val latitude: BigDecimal,
+    val longitude: BigDecimal,
+    val city: String,
+    val country: String
+) {
+    init {
+        require(city.isNotBlank()) { "City cannot be blank" }
+        require(country.isNotBlank()) { "Country cannot be blank" }
+        require(latitude >= BigDecimal("-90") && latitude <= BigDecimal("90")) {
+            "Latitude must be between -90 and 90"
+        }
+        require(longitude >= BigDecimal("-180") && longitude <= BigDecimal("180")) {
+            "Longitude must be between -180 and 180"
         }
     }
 }

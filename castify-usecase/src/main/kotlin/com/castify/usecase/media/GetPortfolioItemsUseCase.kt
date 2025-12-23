@@ -14,8 +14,9 @@ class GetPortfolioItemsUseCase(
 ) {
     fun execute(talentProfileId: UUID): List<PortfolioItemWithMediaResponse> {
         // Verify talent profile exists
-        talentRepository.findById(talentProfileId)
-            ?: throw IllegalArgumentException("Talent profile not found")
+        if (!talentRepository.existsById(talentProfileId)) {
+            throw IllegalArgumentException("Talent profile not found")
+        }
 
         val portfolioItems = mediaRepository.findPortfolioItemsByTalent(talentProfileId)
 

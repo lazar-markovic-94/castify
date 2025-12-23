@@ -32,8 +32,9 @@ class RecordCompletedCollaborationUseCase(
             logger.info("Recording completed collaboration for talent: $talentProfileId with earnings: $earnings")
 
             // Verify talent exists
-            talentRepository.findById(talentProfileId)
-                ?: throw ResourceNotFoundException("Talent profile not found: $talentProfileId")
+            if (!talentRepository.existsById(talentProfileId)) {
+                throw ResourceNotFoundException("Talent profile not found: $talentProfileId")
+            }
 
             val statistics = statisticsRepository.findByTalentProfileId(talentProfileId)
                 ?: TalentStatistics.createInitial(talentProfileId, 0)

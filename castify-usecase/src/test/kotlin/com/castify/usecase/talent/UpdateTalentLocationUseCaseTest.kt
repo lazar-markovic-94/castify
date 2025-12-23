@@ -1,12 +1,11 @@
 package com.castify.usecase.talent
 
 import com.castify.domain.exception.ResourceNotFoundException
-import com.castify.domain.talent.Location
-import com.castify.domain.talent.LocationMode
-import com.castify.domain.talent.TalentProfile
+import com.castify.domain.talent.PrimaryLocation
 import com.castify.domain.talent.TalentRepository
-import com.castify.usecase.dto.LocationDto
-import com.castify.usecase.dto.UpdateLocationRequest
+import com.castify.usecase.TestHelpers
+import com.castify.usecase.dto.PrimaryLocationDto
+import com.castify.usecase.dto.UpdatePrimaryLocationRequest
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -29,29 +28,19 @@ class UpdateTalentLocationUseCaseTest {
     }
 
     @Test
-    fun `should successfully update location to specific`() {
+    fun `should successfully update primary location`() {
         // Given
         val userId = UUID.randomUUID()
-        val talentProfileId = UUID.randomUUID()
+        val existingProfile = TestHelpers.createValidTalentProfile(userId = userId)
 
-        val existingProfile = TalentProfile(
-            talentProfileId = talentProfileId,
-            userId = userId,
-            fullName = "John Actor",
-            bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
-        )
-
-        val newLocation = LocationDto(
-            mode = LocationMode.SPECIFIC,
+        val newLocation = PrimaryLocationDto(
             latitude = BigDecimal("34.0522"),
             longitude = BigDecimal("-118.2437"),
             city = "Los Angeles",
             country = "USA"
         )
 
-        val request = UpdateLocationRequest(location = newLocation)
+        val request = UpdatePrimaryLocationRequest(primaryLocation = newLocation)
 
         every { talentRepository.findByUserId(userId) } returns existingProfile
         every { talentRepository.save(any()) } answers { firstArg() }
@@ -61,48 +50,10 @@ class UpdateTalentLocationUseCaseTest {
 
         // Then
         assertNotNull(result)
-        assertEquals(LocationMode.SPECIFIC, result.location.mode)
-        assertEquals("Los Angeles", result.location.city)
-        assertEquals("USA", result.location.country)
+        assertEquals("Los Angeles", result.primaryLocation?.city)
+        assertEquals("USA", result.primaryLocation?.country)
 
         verify(exactly = 1) { talentRepository.findByUserId(userId) }
-        verify(exactly = 1) { talentRepository.save(any()) }
-    }
-
-    @Test
-    fun `should successfully update location to remote`() {
-        // Given
-        val userId = UUID.randomUUID()
-        val talentProfileId = UUID.randomUUID()
-
-        val existingProfile = TalentProfile(
-            talentProfileId = talentProfileId,
-            userId = userId,
-            fullName = "John Actor",
-            bio = "Bio",
-            location = Location(
-                mode = LocationMode.SPECIFIC,
-                latitude = BigDecimal("40.7128"),
-                longitude = BigDecimal("-74.0060"),
-                city = "New York",
-                country = "USA"
-            ),
-            profileImageUrl = null
-        )
-
-        val newLocation = LocationDto(mode = LocationMode.REMOTE)
-        val request = UpdateLocationRequest(location = newLocation)
-
-        every { talentRepository.findByUserId(userId) } returns existingProfile
-        every { talentRepository.save(any()) } answers { firstArg() }
-
-        // When
-        val result = updateTalentLocationUseCase.execute(userId, request)
-
-        // Then
-        assertNotNull(result)
-        assertEquals(LocationMode.REMOTE, result.location.mode)
-
         verify(exactly = 1) { talentRepository.save(any()) }
     }
 
@@ -110,8 +61,13 @@ class UpdateTalentLocationUseCaseTest {
     fun `should throw ResourceNotFoundException when profile not found`() {
         // Given
         val userId = UUID.randomUUID()
-        val request = UpdateLocationRequest(
-            location = LocationDto(mode = LocationMode.REMOTE)
+        val request = UpdatePrimaryLocationRequest(
+            primaryLocation = PrimaryLocationDto(
+                latitude = BigDecimal("34.0522"),
+                longitude = BigDecimal("-118.2437"),
+                city = "Los Angeles",
+                country = "USA"
+            )
         )
 
         every { talentRepository.findByUserId(userId) } returns null
@@ -127,21 +83,12 @@ class UpdateTalentLocationUseCaseTest {
     }
 
     @Test
-    fun `should throw IllegalArgumentException when location is null`() {
+    fun `should throw IllegalArgumentException when primary location is null`() {
         // Given
         val userId = UUID.randomUUID()
-        val talentProfileId = UUID.randomUUID()
+        val existingProfile = TestHelpers.createValidTalentProfile(userId = userId)
 
-        val existingProfile = TalentProfile(
-            talentProfileId = talentProfileId,
-            userId = userId,
-            fullName = "John Actor",
-            bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
-        )
-
-        val request = UpdateLocationRequest(location = null)
+        val request = UpdatePrimaryLocationRequest(primaryLocation = null)
 
         every { talentRepository.findByUserId(userId) } returns existingProfile
 
@@ -150,7 +97,7 @@ class UpdateTalentLocationUseCaseTest {
             updateTalentLocationUseCase.execute(userId, request)
         }
 
-        assertEquals("Location is required", exception.message)
+        assertEquals("Primary location is required", exception.message)
         verify(exactly = 0) { talentRepository.save(any()) }
     }
 }

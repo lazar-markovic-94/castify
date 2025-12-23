@@ -1,6 +1,7 @@
 package com.castify.usecase.talent
 
 import com.castify.domain.talent.*
+import com.castify.usecase.TestHelpers
 import com.castify.usecase.dto.TalentSearchRequest
 import io.mockk.every
 import io.mockk.mockk
@@ -33,21 +34,23 @@ class SearchTalentsUseCaseTest {
         )
 
         val profiles = listOf(
-            TalentProfile(
+            TestHelpers.createValidTalentProfile(
                 talentProfileId = UUID.randomUUID(),
                 userId = UUID.randomUUID(),
                 fullName = "John Actor",
                 bio = "Actor",
-                location = Location(mode = LocationMode.REMOTE),
-                profileImageUrl = null
+                locationMode = LocationMode.REMOTE,
+                primaryLocation = null,
+                geoAreas = emptySet()
             ),
-            TalentProfile(
+            TestHelpers.createValidTalentProfile(
                 talentProfileId = UUID.randomUUID(),
                 userId = UUID.randomUUID(),
                 fullName = "Jane Singer",
                 bio = "Singer",
-                location = Location(mode = LocationMode.REMOTE),
-                profileImageUrl = null
+                locationMode = LocationMode.REMOTE,
+                primaryLocation = null,
+                geoAreas = emptySet()
             )
         )
 
@@ -82,13 +85,14 @@ class SearchTalentsUseCaseTest {
         )
 
         val profiles = listOf(
-            TalentProfile(
+            TestHelpers.createValidTalentProfile(
                 talentProfileId = UUID.randomUUID(),
                 userId = UUID.randomUUID(),
                 fullName = "Multi-talented Artist",
                 bio = "Actor and Singer",
-                location = Location(mode = LocationMode.REMOTE),
-                profileImageUrl = null,
+                locationMode = LocationMode.REMOTE,
+                primaryLocation = null,
+                geoAreas = emptySet(),
                 capabilities = TalentCapabilities(
                     canDoActing = true,
                     canDoSinging = true
@@ -126,19 +130,19 @@ class SearchTalentsUseCaseTest {
         )
 
         val profiles = listOf(
-            TalentProfile(
+            TestHelpers.createValidTalentProfile(
                 talentProfileId = UUID.randomUUID(),
                 userId = UUID.randomUUID(),
                 fullName = "Local Artist",
                 bio = "Based in LA",
-                location = Location(
-                    mode = LocationMode.SPECIFIC,
+                locationMode = LocationMode.SPECIFIC,
+                primaryLocation = PrimaryLocation(
                     latitude = BigDecimal("34.0522"),
                     longitude = BigDecimal("-118.2437"),
                     city = "Los Angeles",
                     country = "USA"
                 ),
-                profileImageUrl = null
+                geoAreas = setOf(GeoArea("Los Angeles", "USA", true))
             )
         )
 
@@ -170,13 +174,14 @@ class SearchTalentsUseCaseTest {
         )
 
         val profiles = listOf(
-            TalentProfile(
+            TestHelpers.createValidTalentProfile(
                 talentProfileId = UUID.randomUUID(),
                 userId = UUID.randomUUID(),
                 fullName = "Comic Actor",
                 bio = "Actor and Comedian",
-                location = Location(mode = LocationMode.REMOTE),
-                profileImageUrl = null,
+                locationMode = LocationMode.REMOTE,
+                primaryLocation = null,
+                geoAreas = emptySet(),
                 tags = setOf("Actor", "Comedian")
             )
         )
