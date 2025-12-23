@@ -7,6 +7,7 @@ interface TalentRepository {
     fun save(talentProfile: TalentProfile): TalentProfile
     fun findById(talentProfileId: UUID): TalentProfile?
     fun findByUserId(userId: UUID): TalentProfile?
+    fun existsById(talentProfileId: UUID): Boolean
     fun search(searchCriteria: TalentSearchCriteria): List<TalentProfile>
     fun searchPaginated(searchCriteria: TalentSearchCriteria, page: Int, size: Int): PagedTalentResult
 }

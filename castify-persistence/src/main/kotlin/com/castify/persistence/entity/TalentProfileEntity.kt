@@ -26,17 +26,17 @@ class TalentProfileEntity(
     @Column(name = "location_mode", nullable = false, length = 20)
     var locationMode: LocationMode,
 
-    @Column(precision = 10, scale = 7)
-    var latitude: BigDecimal? = null,
+    @Column(name = "primary_latitude", precision = 10, scale = 7)
+    var primaryLatitude: BigDecimal? = null,
 
-    @Column(precision = 10, scale = 7)
-    var longitude: BigDecimal? = null,
+    @Column(name = "primary_longitude", precision = 10, scale = 7)
+    var primaryLongitude: BigDecimal? = null,
 
-    @Column(length = 100)
-    var city: String? = null,
+    @Column(name = "primary_city", length = 100)
+    var primaryCity: String? = null,
 
-    @Column(length = 100)
-    var country: String? = null,
+    @Column(name = "primary_country", length = 100)
+    var primaryCountry: String? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "verification_status", nullable = false, length = 20)
@@ -94,14 +94,19 @@ class TalentProfileEntity(
     @OneToMany(mappedBy = "talentProfile", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var socialLinks: MutableSet<TalentSocialLinkEntity> = mutableSetOf()
 
+    @OneToMany(mappedBy = "talentProfile", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var geoAreas: MutableSet<TalentGeoAreaEntity> = mutableSetOf()
+
     fun toDomain(): TalentProfile {
-        val location = Location(
-            mode = locationMode,
-            latitude = latitude,
-            longitude = longitude,
-            city = city,
-            country = country
-        )
+        val primaryLocation = if (primaryLatitude != null && primaryLongitude != null
+            && primaryCity != null && primaryCountry != null) {
+            PrimaryLocation(
+                latitude = primaryLatitude!!,
+                longitude = primaryLongitude!!,
+                city = primaryCity!!,
+                country = primaryCountry!!
+            )
+        } else null
 
         val capabilities = TalentCapabilities(
             canDoVoiceover = canDoVoiceover,
@@ -118,7 +123,9 @@ class TalentProfileEntity(
             userId = userId,
             fullName = fullName,
             bio = bio,
-            location = location,
+            locationMode = locationMode,
+            primaryLocation = primaryLocation,
+            geoAreas = geoAreas.map { it.toDomain() }.toSet(),
             languages = languages.map { it.languageCode }.toSet(),
             tags = tags.map { it.tagName }.toSet(),
             capabilities = capabilities,
@@ -137,11 +144,11 @@ class TalentProfileEntity(
                 userId = profile.userId,
                 fullName = profile.fullName,
                 bio = profile.bio,
-                locationMode = profile.location.mode,
-                latitude = profile.location.latitude,
-                longitude = profile.location.longitude,
-                city = profile.location.city,
-                country = profile.location.country,
+                locationMode = profile.locationMode,
+                primaryLatitude = profile.primaryLocation?.latitude,
+                primaryLongitude = profile.primaryLocation?.longitude,
+                primaryCity = profile.primaryLocation?.city,
+                primaryCountry = profile.primaryLocation?.country,
                 verificationStatus = profile.verificationStatus,
                 profileImageUrl = profile.profileImageUrl,
                 canDoVoiceover = profile.capabilities.canDoVoiceover,
@@ -174,6 +181,11 @@ class TalentProfileEntity(
             // Add social links
             entity.socialLinks = profile.socialLinks.map { link ->
                 TalentSocialLinkEntity.fromDomain(entity, link)
+            }.toMutableSet()
+
+            // Add geo areas
+            entity.geoAreas = profile.geoAreas.map { geoArea ->
+                TalentGeoAreaEntity.fromDomain(entity, geoArea)
             }.toMutableSet()
 
             return entity
@@ -245,6 +257,43 @@ class TalentSocialLinkEntity(
                 platform = link.platform,
                 url = link.url,
                 followerCount = link.followerCount
+            )
+    }
+}
+
+@Entity
+@Table(name = "talent_geo_area")
+class TalentGeoAreaEntity(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "talent_profile_id", nullable = false)
+    var talentProfile: TalentProfileEntity,
+
+    @Column(nullable = false, length = 100)
+    var city: String,
+
+    @Column(nullable = false, length = 100)
+    var country: String,
+
+    @Column(name = "is_primary", nullable = false)
+    var isPrimary: Boolean = false
+) {
+    fun toDomain(): GeoArea = GeoArea(
+        city = city,
+        country = country,
+        isPrimary = isPrimary
+    )
+
+    companion object {
+        fun fromDomain(talentProfile: TalentProfileEntity, geoArea: GeoArea): TalentGeoAreaEntity =
+            TalentGeoAreaEntity(
+                talentProfile = talentProfile,
+                city = geoArea.city,
+                country = geoArea.country,
+                isPrimary = geoArea.isPrimary
             )
     }
 }

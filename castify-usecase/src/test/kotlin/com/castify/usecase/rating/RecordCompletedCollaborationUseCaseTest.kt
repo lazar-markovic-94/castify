@@ -4,10 +4,10 @@ import com.castify.domain.exception.ResourceNotFoundException
 import com.castify.domain.rating.TalentStatistics
 import com.castify.domain.rating.TalentStatisticsRepository
 import com.castify.domain.rating.TalentTier
-import com.castify.domain.talent.Location
 import com.castify.domain.talent.LocationMode
 import com.castify.domain.talent.TalentProfile
 import com.castify.domain.talent.TalentRepository
+import com.castify.usecase.TestHelpers
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -38,13 +38,14 @@ class RecordCompletedCollaborationUseCaseTest {
         val talentProfileId = UUID.randomUUID()
         val earnings = 500.0
 
-        val talentProfile = TalentProfile(
+        val talentProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = UUID.randomUUID(),
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val currentStats = TalentStatistics(
@@ -68,7 +69,7 @@ class RecordCompletedCollaborationUseCaseTest {
         )
 
         val savedSlot = slot<TalentStatistics>()
-        every { talentRepository.findById(talentProfileId) } returns talentProfile
+        every { talentRepository.existsById(talentProfileId) } returns true
         every { statisticsRepository.findByTalentProfileId(talentProfileId) } returns currentStats
         every { statisticsRepository.save(capture(savedSlot)) } answers { firstArg() }
 
@@ -90,7 +91,7 @@ class RecordCompletedCollaborationUseCaseTest {
         // Given
         val talentProfileId = UUID.randomUUID()
 
-        every { talentRepository.findById(talentProfileId) } returns null
+        every { talentRepository.existsById(talentProfileId) } returns false
 
         // When & Then
         val exception = assertThrows<ResourceNotFoundException> {

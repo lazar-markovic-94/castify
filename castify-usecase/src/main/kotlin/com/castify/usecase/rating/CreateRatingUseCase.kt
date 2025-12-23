@@ -41,8 +41,9 @@ class CreateRatingUseCase(
             logger.info("Creating rating for talent: ${request.talentProfileId} by client: $clientUserId")
 
             // Verify talent profile exists
-            talentRepository.findById(request.talentProfileId)
-                ?: throw ResourceNotFoundException("Talent profile not found: ${request.talentProfileId}")
+            if (!talentRepository.existsById(request.talentProfileId)) {
+                throw ResourceNotFoundException("Talent profile not found: ${request.talentProfileId}")
+            }
 
             // Check if client already rated this talent for this collaboration
             if (request.collaborationId != null) {

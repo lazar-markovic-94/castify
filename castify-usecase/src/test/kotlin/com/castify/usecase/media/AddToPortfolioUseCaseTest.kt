@@ -6,10 +6,10 @@ import com.castify.domain.media.ContentType
 import com.castify.domain.media.MediaAsset
 import com.castify.domain.media.MediaRepository
 import com.castify.domain.media.MediaType
-import com.castify.domain.talent.Location
 import com.castify.domain.talent.LocationMode
 import com.castify.domain.talent.TalentProfile
 import com.castify.domain.talent.TalentRepository
+import com.castify.usecase.TestHelpers
 import com.castify.usecase.dto.AddToPortfolioRequest
 import io.mockk.every
 import io.mockk.mockk
@@ -41,13 +41,14 @@ class AddToPortfolioUseCaseTest {
         val talentProfileId = UUID.randomUUID()
         val mediaAssetId = UUID.randomUUID()
 
-        val talentProfile = TalentProfile(
+        val talentProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val mediaAsset = MediaAsset(
@@ -114,13 +115,14 @@ class AddToPortfolioUseCaseTest {
         val talentProfileId = UUID.randomUUID()
         val mediaAssetId = UUID.randomUUID()
 
-        val talentProfile = TalentProfile(
+        val talentProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val request = AddToPortfolioRequest(
@@ -148,13 +150,14 @@ class AddToPortfolioUseCaseTest {
         val talentProfileId = UUID.randomUUID()
         val mediaAssetId = UUID.randomUUID()
 
-        val talentProfile = TalentProfile(
+        val talentProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val mediaAsset = MediaAsset(
@@ -194,13 +197,14 @@ class AddToPortfolioUseCaseTest {
         val userId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
-        val talentProfile = TalentProfile(
+        val talentProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val request = AddToPortfolioRequest(

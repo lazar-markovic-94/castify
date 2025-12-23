@@ -1,10 +1,12 @@
 package com.castify.usecase.talent
 
 import com.castify.domain.exception.ResourceNotFoundException
-import com.castify.domain.talent.Location
+import com.castify.domain.talent.GeoArea
 import com.castify.domain.talent.LocationMode
+import com.castify.domain.talent.PrimaryLocation
 import com.castify.domain.talent.TalentProfile
 import com.castify.domain.talent.TalentRepository
+import com.castify.usecase.TestHelpers
 import com.castify.usecase.dto.TalentProfileResponse
 import io.mockk.every
 import io.mockk.mockk
@@ -35,21 +37,19 @@ class GetTalentProfileUseCaseTest {
         val talentProfileId = UUID.randomUUID()
         val userId = UUID.randomUUID()
 
-        val location = Location(
-            mode = LocationMode.SPECIFIC,
-            latitude = BigDecimal("34.0522"),
-            longitude = BigDecimal("-118.2437"),
-            city = "Los Angeles",
-            country = "USA"
-        )
-
-        val profile = TalentProfile(
+        val profile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Experienced actor with 10 years",
-            location = location,
-            profileImageUrl = "https://example.com/profile.jpg"
+            locationMode = LocationMode.SPECIFIC,
+            primaryLocation = PrimaryLocation(
+                latitude = BigDecimal("34.0522"),
+                longitude = BigDecimal("-118.2437"),
+                city = "Los Angeles",
+                country = "USA"
+            ),
+            geoAreas = setOf(GeoArea("Los Angeles", "USA", true))
         )
 
         every { talentRepository.findById(talentProfileId) } returns profile
@@ -62,8 +62,8 @@ class GetTalentProfileUseCaseTest {
         assertNotNull(result)
         assertEquals("John Actor", result.fullName)
         assertEquals("Experienced actor with 10 years", result.bio)
-        assertEquals(LocationMode.SPECIFIC, result.location.mode)
-        assertEquals("Los Angeles", result.location.city)
+        assertEquals(LocationMode.SPECIFIC, result.locationMode)
+        assertEquals("Los Angeles", result.primaryLocation?.city)
 
         verify(exactly = 1) { talentRepository.findById(talentProfileId) }
     }
@@ -74,21 +74,14 @@ class GetTalentProfileUseCaseTest {
         val talentProfileId = UUID.randomUUID()
         val userId = UUID.randomUUID()
 
-        val location = Location(
-            mode = LocationMode.REMOTE,
-            latitude = null,
-            longitude = null,
-            city = null,
-            country = null
-        )
-
-        val profile = TalentProfile(
+        val profile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "Remote Worker",
             bio = "Works remotely",
-            location = location,
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         every { talentRepository.findByUserId(userId) } returns profile
@@ -100,7 +93,7 @@ class GetTalentProfileUseCaseTest {
         // Then
         assertNotNull(result)
         assertEquals("Remote Worker", result.fullName)
-        assertEquals(LocationMode.REMOTE, result.location.mode)
+        assertEquals(LocationMode.REMOTE, result.locationMode)
 
         verify(exactly = 1) { talentRepository.findByUserId(userId) }
     }
@@ -143,20 +136,19 @@ class GetTalentProfileUseCaseTest {
         val talentProfileId = UUID.randomUUID()
         val userId = UUID.randomUUID()
 
-        val location = Location(
-            mode = LocationMode.SPECIFIC,
-            latitude = BigDecimal("40.7128"),
-            longitude = BigDecimal("-74.0060"),
-            city = "New York",
-            country = "USA"
-        )
-
-        val profile = TalentProfile(
+        val profile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "Complete Profile",
             bio = "This is a complete bio with all details",
-            location = location,
+            locationMode = LocationMode.SPECIFIC,
+            primaryLocation = PrimaryLocation(
+                latitude = BigDecimal("40.7128"),
+                longitude = BigDecimal("-74.0060"),
+                city = "New York",
+                country = "USA"
+            ),
+            geoAreas = setOf(GeoArea("New York", "USA", true)),
             profileImageUrl = "https://example.com/full-profile.jpg"
         )
 
@@ -179,21 +171,14 @@ class GetTalentProfileUseCaseTest {
         val talentProfileId = UUID.randomUUID()
         val userId = UUID.randomUUID()
 
-        val location = Location(
-            mode = LocationMode.REMOTE,
-            latitude = null,
-            longitude = null,
-            city = null,
-            country = null
-        )
-
-        val profile = TalentProfile(
+        val profile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "Minimal Profile",
             bio = null,
-            location = location,
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         every { talentRepository.findById(talentProfileId) } returns profile

@@ -1,11 +1,11 @@
 package com.castify.usecase.talent
 
 import com.castify.domain.exception.ResourceNotFoundException
-import com.castify.domain.talent.Location
 import com.castify.domain.talent.LocationMode
 import com.castify.domain.talent.SocialLink
 import com.castify.domain.talent.TalentProfile
 import com.castify.domain.talent.TalentRepository
+import com.castify.usecase.TestHelpers
 import com.castify.usecase.dto.SocialLinkDto
 import com.castify.usecase.dto.UpdateSocialLinksRequest
 import io.mockk.every
@@ -34,13 +34,14 @@ class UpdateTalentSocialLinksUseCaseTest {
         val userId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
-        val existingProfile = TalentProfile(
+        val existingProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val socialLinksDto = setOf(
@@ -71,13 +72,14 @@ class UpdateTalentSocialLinksUseCaseTest {
         val userId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
-        val existingProfile = TalentProfile(
+        val existingProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null,
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet(),
             socialLinks = setOf(
                 SocialLink("INSTAGRAM", "https://instagram.com/old")
             )
@@ -127,13 +129,14 @@ class UpdateTalentSocialLinksUseCaseTest {
         val userId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
-        val existingProfile = TalentProfile(
+        val existingProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val request = UpdateSocialLinksRequest(socialLinks = null)
@@ -155,13 +158,14 @@ class UpdateTalentSocialLinksUseCaseTest {
         val userId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
-        val existingProfile = TalentProfile(
+        val existingProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val socialLinksDto = setOf(

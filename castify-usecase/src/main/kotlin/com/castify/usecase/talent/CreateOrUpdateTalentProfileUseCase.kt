@@ -50,7 +50,9 @@ class CreateOrUpdateTalentProfileUseCase(
 
             // Validate required fields
             val fullName = requireNotNull(request.fullName) { "Full name is required" }
-            val locationDto = requireNotNull(request.location) { "Location is required" }
+            val locationMode = request.locationMode ?: com.castify.domain.talent.LocationMode.SPECIFIC
+            val primaryLocationDto = request.primaryLocation
+            val geoAreaDtos = request.geoAreas ?: emptySet()
 
             // Check if profile exists
             val existingProfile = talentRepository.findByUserId(userId)
@@ -60,7 +62,9 @@ class CreateOrUpdateTalentProfileUseCase(
                 existingProfile.copy(
                     fullName = fullName,
                     bio = request.bio,
-                    location = locationDto.toDomain(),
+                    locationMode = locationMode,
+                    primaryLocation = primaryLocationDto?.toDomain(),
+                    geoAreas = geoAreaDtos.map { it.toDomain() }.toSet(),
                     profileImageUrl = request.profileImageUrl
                 )
             } else {
@@ -70,7 +74,9 @@ class CreateOrUpdateTalentProfileUseCase(
                     userId = userId,
                     fullName = fullName,
                     bio = request.bio,
-                    location = locationDto.toDomain(),
+                    locationMode = locationMode,
+                    primaryLocation = primaryLocationDto?.toDomain(),
+                    geoAreas = geoAreaDtos.map { it.toDomain() }.toSet(),
                     profileImageUrl = request.profileImageUrl
                 )
             }

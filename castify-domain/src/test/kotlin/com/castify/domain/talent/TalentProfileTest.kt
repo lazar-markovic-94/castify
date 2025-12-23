@@ -8,8 +8,9 @@ import java.util.*
 
 class TalentProfileTest {
 
-    private fun createValidLocation() = Location(
-        mode = LocationMode.REMOTE,
+    private fun createValidPrimaryLocation() = PrimaryLocation(
+        latitude = BigDecimal("40.7128"),
+        longitude = BigDecimal("-74.0060"),
         city = "New York",
         country = "USA"
     )
@@ -18,7 +19,9 @@ class TalentProfileTest {
         talentProfileId = UUID.randomUUID(),
         userId = UUID.randomUUID(),
         fullName = "John Doe",
-        location = createValidLocation()
+        locationMode = LocationMode.SPECIFIC,
+        primaryLocation = createValidPrimaryLocation(),
+        geoAreas = setOf(GeoArea("New York", "USA", true))
     )
 
     @Test
@@ -28,7 +31,8 @@ class TalentProfileTest {
         val userId = UUID.randomUUID()
         val fullName = "Jane Smith"
         val bio = "Experienced voice actor"
-        val location = createValidLocation()
+        val primaryLocation = createValidPrimaryLocation()
+        val geoAreas = setOf(GeoArea("New York", "USA", true), GeoArea("Los Angeles", "USA", false))
         val languages = setOf("English", "Spanish")
         val tags = setOf("voice-acting", "commercial")
         val capabilities = TalentCapabilities(canDoVoiceover = true)
@@ -42,7 +46,9 @@ class TalentProfileTest {
             userId = userId,
             fullName = fullName,
             bio = bio,
-            location = location,
+            locationMode = LocationMode.SPECIFIC,
+            primaryLocation = primaryLocation,
+            geoAreas = geoAreas,
             languages = languages,
             tags = tags,
             capabilities = capabilities,
@@ -56,7 +62,9 @@ class TalentProfileTest {
         assertEquals(userId, profile.userId)
         assertEquals(fullName, profile.fullName)
         assertEquals(bio, profile.bio)
-        assertEquals(location, profile.location)
+        assertEquals(LocationMode.SPECIFIC, profile.locationMode)
+        assertEquals(primaryLocation, profile.primaryLocation)
+        assertEquals(geoAreas, profile.geoAreas)
         assertEquals(languages, profile.languages)
         assertEquals(tags, profile.tags)
         assertEquals(capabilities, profile.capabilities)
@@ -86,7 +94,8 @@ class TalentProfileTest {
                 talentProfileId = UUID.randomUUID(),
                 userId = UUID.randomUUID(),
                 fullName = "",
-                location = createValidLocation()
+                locationMode = LocationMode.SPECIFIC,
+                primaryLocation = createValidPrimaryLocation()
             )
         }
 
@@ -109,23 +118,61 @@ class TalentProfileTest {
     }
 
     @Test
-    fun `should update location`() {
+    fun `should update primary location`() {
         // Given
         val profile = createValidTalentProfile()
-        val newLocation = Location(
-            mode = LocationMode.SPECIFIC,
-            latitude = BigDecimal("40.7128"),
-            longitude = BigDecimal("-74.0060"),
-            city = "New York",
+        val newLocation = PrimaryLocation(
+            latitude = BigDecimal("34.0522"),
+            longitude = BigDecimal("-118.2437"),
+            city = "Los Angeles",
             country = "USA"
         )
 
         // When
-        val updatedProfile = profile.updateLocation(newLocation)
+        val updatedProfile = profile.updatePrimaryLocation(newLocation)
 
         // Then
-        assertEquals(newLocation, updatedProfile.location)
+        assertEquals(newLocation, updatedProfile.primaryLocation)
         assertEquals(profile.talentProfileId, updatedProfile.talentProfileId)
+    }
+
+    @Test
+    fun `should add geo area`() {
+        // Given
+        val profile = createValidTalentProfile()
+        val newArea = GeoArea("Chicago", "USA", false)
+
+        // When
+        val updatedProfile = profile.addGeoArea(newArea)
+
+        // Then
+        assertTrue(updatedProfile.geoAreas.contains(newArea))
+        assertEquals(profile.geoAreas.size + 1, updatedProfile.geoAreas.size)
+    }
+
+    @Test
+    fun `should remove geo area`() {
+        // Given
+        val profile = createValidTalentProfile()
+        val areaToRemove = profile.geoAreas.first()
+
+        // When
+        val updatedProfile = profile.removeGeoArea(areaToRemove.city, areaToRemove.country)
+
+        // Then
+        assertFalse(updatedProfile.geoAreas.contains(areaToRemove))
+    }
+
+    @Test
+    fun `should throw exception when adding duplicate geo area`() {
+        // Given
+        val profile = createValidTalentProfile()
+        val existingArea = profile.geoAreas.first()
+
+        // When & Then
+        assertThrows<IllegalArgumentException> {
+            profile.addGeoArea(existingArea)
+        }
     }
 
     @Test
@@ -308,34 +355,16 @@ class TalentProfileTest {
     }
 }
 
-class LocationTest {
+class PrimaryLocationTest {
 
     @Test
-    fun `should create remote location`() {
-        // When
-        val location = Location(
-            mode = LocationMode.REMOTE,
-            city = "New York",
-            country = "USA"
-        )
-
-        // Then
-        assertEquals(LocationMode.REMOTE, location.mode)
-        assertEquals("New York", location.city)
-        assertEquals("USA", location.country)
-        assertNull(location.latitude)
-        assertNull(location.longitude)
-    }
-
-    @Test
-    fun `should create specific location with coordinates`() {
+    fun `should create primary location with coordinates`() {
         // Given
         val latitude = BigDecimal("40.7128")
         val longitude = BigDecimal("-74.0060")
 
         // When
-        val location = Location(
-            mode = LocationMode.SPECIFIC,
+        val location = PrimaryLocation(
             latitude = latitude,
             longitude = longitude,
             city = "New York",
@@ -343,37 +372,111 @@ class LocationTest {
         )
 
         // Then
-        assertEquals(LocationMode.SPECIFIC, location.mode)
         assertEquals(latitude, location.latitude)
         assertEquals(longitude, location.longitude)
+        assertEquals("New York", location.city)
+        assertEquals("USA", location.country)
     }
 
     @Test
-    fun `should throw exception when specific location missing coordinates`() {
+    fun `should throw exception when city is blank`() {
         // When & Then
         val exception = assertThrows<IllegalArgumentException> {
-            Location(
-                mode = LocationMode.SPECIFIC,
+            PrimaryLocation(
+                latitude = BigDecimal("40.7128"),
+                longitude = BigDecimal("-74.0060"),
+                city = "",
+                country = "USA"
+            )
+        }
+
+        assertEquals("City cannot be blank", exception.message)
+    }
+
+    @Test
+    fun `should throw exception when country is blank`() {
+        // When & Then
+        val exception = assertThrows<IllegalArgumentException> {
+            PrimaryLocation(
+                latitude = BigDecimal("40.7128"),
+                longitude = BigDecimal("-74.0060"),
+                city = "New York",
+                country = ""
+            )
+        }
+
+        assertEquals("Country cannot be blank", exception.message)
+    }
+
+    @Test
+    fun `should throw exception when latitude is out of range`() {
+        // When & Then
+        val exception = assertThrows<IllegalArgumentException> {
+            PrimaryLocation(
+                latitude = BigDecimal("91"),
+                longitude = BigDecimal("-74.0060"),
                 city = "New York",
                 country = "USA"
             )
         }
 
-        assertEquals("Latitude and longitude are required for specific location mode", exception.message)
+        assertTrue(exception.message!!.contains("Latitude"))
     }
+}
+
+class GeoAreaTest {
 
     @Test
-    fun `should create hybrid location`() {
+    fun `should create geo area`() {
         // When
-        val location = Location(
-            mode = LocationMode.HYBRID,
-            city = "San Francisco",
-            country = "USA"
+        val geoArea = GeoArea(
+            city = "Belgrade",
+            country = "Serbia",
+            isPrimary = true
         )
 
         // Then
-        assertEquals(LocationMode.HYBRID, location.mode)
-        assertEquals("San Francisco", location.city)
+        assertEquals("Belgrade", geoArea.city)
+        assertEquals("Serbia", geoArea.country)
+        assertTrue(geoArea.isPrimary)
+    }
+
+    @Test
+    fun `should create non-primary geo area by default`() {
+        // When
+        val geoArea = GeoArea(
+            city = "Novi Sad",
+            country = "Serbia"
+        )
+
+        // Then
+        assertFalse(geoArea.isPrimary)
+    }
+
+    @Test
+    fun `should throw exception when city is blank`() {
+        // When & Then
+        val exception = assertThrows<IllegalArgumentException> {
+            GeoArea(
+                city = "",
+                country = "Serbia"
+            )
+        }
+
+        assertEquals("City cannot be blank", exception.message)
+    }
+
+    @Test
+    fun `should throw exception when country is blank`() {
+        // When & Then
+        val exception = assertThrows<IllegalArgumentException> {
+            GeoArea(
+                city = "Belgrade",
+                country = ""
+            )
+        }
+
+        assertEquals("Country cannot be blank", exception.message)
     }
 }
 

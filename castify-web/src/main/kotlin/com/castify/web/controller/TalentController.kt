@@ -17,6 +17,7 @@ class TalentController(
     private val createOrUpdateTalentProfileUseCase: CreateOrUpdateTalentProfileUseCase,
     private val getTalentProfileUseCase: GetTalentProfileUseCase,
     private val updateTalentLocationUseCase: UpdateTalentLocationUseCase,
+    private val manageTalentGeoAreasUseCase: ManageTalentGeoAreasUseCase,
     private val updateTalentLanguagesUseCase: UpdateTalentLanguagesUseCase,
     private val updateTalentTagsUseCase: UpdateTalentTagsUseCase,
     private val updateTalentCapabilitiesUseCase: UpdateTalentCapabilitiesUseCase,
@@ -59,11 +60,33 @@ class TalentController(
         return createOrUpdateTalentProfileUseCase.updateProfileImage(userId, imageUrl)
     }
 
-    @PutMapping("/location")
-    @Operation(summary = "Update talent location")
-    fun updateLocation(@Valid @RequestBody request: UpdateLocationRequest): TalentProfileResponse {
+    @PutMapping("/primary-location")
+    @Operation(summary = "Update talent primary location")
+    fun updatePrimaryLocation(@Valid @RequestBody request: UpdatePrimaryLocationRequest): TalentProfileResponse {
         val userId = SecurityUtils.getCurrentUserId()
         return updateTalentLocationUseCase.execute(userId, request)
+    }
+
+    @PostMapping("/geo-areas")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Add a new geographical service area")
+    fun addGeoArea(@Valid @RequestBody request: AddGeoAreaRequest): TalentProfileResponse {
+        val userId = SecurityUtils.getCurrentUserId()
+        return manageTalentGeoAreasUseCase.addGeoArea(userId, request)
+    }
+
+    @DeleteMapping("/geo-areas")
+    @Operation(summary = "Remove a geographical service area")
+    fun removeGeoArea(@Valid @RequestBody request: RemoveGeoAreaRequest): TalentProfileResponse {
+        val userId = SecurityUtils.getCurrentUserId()
+        return manageTalentGeoAreasUseCase.removeGeoArea(userId, request)
+    }
+
+    @PutMapping("/geo-areas")
+    @Operation(summary = "Update all geographical service areas (bulk update)")
+    fun updateGeoAreas(@Valid @RequestBody request: UpdateGeoAreasRequest): TalentProfileResponse {
+        val userId = SecurityUtils.getCurrentUserId()
+        return manageTalentGeoAreasUseCase.updateGeoAreas(userId, request)
     }
 
     @PutMapping("/languages")

@@ -1,11 +1,11 @@
 package com.castify.usecase.talent
 
 import com.castify.domain.exception.ResourceNotFoundException
-import com.castify.domain.talent.Location
 import com.castify.domain.talent.LocationMode
 import com.castify.domain.talent.TalentCapabilities
 import com.castify.domain.talent.TalentProfile
 import com.castify.domain.talent.TalentRepository
+import com.castify.usecase.TestHelpers
 import com.castify.usecase.dto.UpdateCapabilitiesRequest
 import io.mockk.every
 import io.mockk.mockk
@@ -33,13 +33,14 @@ class UpdateTalentCapabilitiesUseCaseTest {
         val userId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
-        val existingProfile = TalentProfile(
+        val existingProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val request = UpdateCapabilitiesRequest(
@@ -76,13 +77,14 @@ class UpdateTalentCapabilitiesUseCaseTest {
         val userId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
-        val existingProfile = TalentProfile(
+        val existingProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null,
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet(),
             capabilities = TalentCapabilities(
                 canDoVoiceover = true,
                 canDoActing = true,
@@ -145,13 +147,14 @@ class UpdateTalentCapabilitiesUseCaseTest {
         val userId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
 
-        val existingProfile = TalentProfile(
+        val existingProfile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = userId,
             fullName = "John Actor",
             bio = "Bio",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = null
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet()
         )
 
         val request = UpdateCapabilitiesRequest(

@@ -5,6 +5,7 @@ import com.castify.domain.rating.TalentStatistics
 import com.castify.domain.rating.TalentStatisticsRepository
 import com.castify.domain.rating.TalentTier
 import com.castify.domain.talent.*
+import com.castify.usecase.TestHelpers
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -33,13 +34,14 @@ class UpdateProfileCompletenessUseCaseTest {
         // Given
         val talentProfileId = UUID.randomUUID()
 
-        val profile = TalentProfile(
+        val profile = TestHelpers.createValidTalentProfile(
             talentProfileId = talentProfileId,
             userId = UUID.randomUUID(),
             fullName = "John Actor",
             bio = "Experienced actor",
-            location = Location(mode = LocationMode.REMOTE),
-            profileImageUrl = "https://example.com/profile.jpg",
+            locationMode = LocationMode.REMOTE,
+            primaryLocation = null,
+            geoAreas = emptySet(),
             languages = setOf("English", "Spanish"),
             tags = setOf("Actor", "Comedian", "Voice"),
             capabilities = com.castify.domain.talent.TalentCapabilities(
