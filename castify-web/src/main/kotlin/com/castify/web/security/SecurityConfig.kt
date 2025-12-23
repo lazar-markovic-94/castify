@@ -30,6 +30,7 @@ class SecurityConfig(
                 auth
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/upload/**").permitAll()
+                    .requestMatchers("/api/talents/search", "/api/talents/*", "/api/talents/user/*").permitAll()
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs").permitAll()
                     .anyRequest().authenticated()
             }
