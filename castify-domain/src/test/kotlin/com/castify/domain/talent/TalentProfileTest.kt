@@ -225,7 +225,7 @@ class TalentProfileTest {
     fun `should update tags`() {
         // Given
         val profile = createValidTalentProfile()
-        val newTags = setOf("acting", "singing", "dancing")
+        val newTags = setOf("acting", "voiceover", "photoshooting")
 
         // When
         val updatedProfile = profile.updateTags(newTags)
@@ -242,11 +242,11 @@ class TalentProfileTest {
         val profileWithTag = profile.copy(tags = existingTags)
 
         // When
-        val updatedProfile = profileWithTag.addTag("singing")
+        val updatedProfile = profileWithTag.addTag("voiceover")
 
         // Then
         assertTrue(updatedProfile.tags.contains("acting"))
-        assertTrue(updatedProfile.tags.contains("singing"))
+        assertTrue(updatedProfile.tags.contains("voiceover"))
         assertEquals(2, updatedProfile.tags.size)
     }
 
@@ -254,16 +254,16 @@ class TalentProfileTest {
     fun `should remove tag`() {
         // Given
         val profile = createValidTalentProfile()
-        val existingTags = setOf("acting", "singing", "dancing")
+        val existingTags = setOf("acting", "voiceover", "photoshooting")
         val profileWithTags = profile.copy(tags = existingTags)
 
         // When
-        val updatedProfile = profileWithTags.removeTag("singing")
+        val updatedProfile = profileWithTags.removeTag("voiceover")
 
         // Then
         assertTrue(updatedProfile.tags.contains("acting"))
-        assertTrue(updatedProfile.tags.contains("dancing"))
-        assertFalse(updatedProfile.tags.contains("singing"))
+        assertTrue(updatedProfile.tags.contains("photoshooting"))
+        assertFalse(updatedProfile.tags.contains("voiceover"))
         assertEquals(2, updatedProfile.tags.size)
     }
 

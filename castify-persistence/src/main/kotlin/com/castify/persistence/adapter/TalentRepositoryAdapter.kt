@@ -1,10 +1,15 @@
 package com.castify.persistence.adapter
 
 import com.castify.domain.talent.PagedTalentResult
+import com.castify.domain.talent.PredefinedTags
 import com.castify.domain.talent.TalentProfile
 import com.castify.domain.talent.TalentRepository
 import com.castify.domain.talent.TalentSearchCriteria
+import com.castify.persistence.entity.TalentGeoAreaEntity
+import com.castify.persistence.entity.TalentLanguageEntity
 import com.castify.persistence.entity.TalentProfileEntity
+import com.castify.persistence.entity.TalentSocialLinkEntity
+import com.castify.persistence.entity.TalentTagEntity
 import com.castify.persistence.jpa.TalentProfileJpaRepository
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
@@ -22,7 +27,82 @@ class TalentRepositoryAdapter(
 ) : TalentRepository {
 
     override fun save(talentProfile: TalentProfile): TalentProfile {
-        val entity = TalentProfileEntity.fromDomain(talentProfile)
+        val existingEntity = talentProfileJpaRepository.findById(talentProfile.talentProfileId).orElse(null)
+
+        val entity = if (existingEntity != null) {
+            // Update existing entity to preserve version and avoid optimistic locking issues
+            existingEntity.apply {
+                userId = talentProfile.userId
+                fullName = talentProfile.fullName
+                bio = talentProfile.bio
+                locationMode = talentProfile.locationMode
+                primaryLatitude = talentProfile.primaryLocation?.latitude
+                primaryLongitude = talentProfile.primaryLocation?.longitude
+                primaryCity = talentProfile.primaryLocation?.city
+                primaryCountry = talentProfile.primaryLocation?.country
+                verificationStatus = talentProfile.verificationStatus
+                profileImageUrl = talentProfile.profileImageUrl
+                canDoVoiceover = talentProfile.capabilities.canDoVoiceover
+                canDoActing = talentProfile.capabilities.canDoActing
+                canDoModeling = talentProfile.capabilities.canDoModeling
+                canDoSinging = talentProfile.capabilities.canDoSinging
+                canDoDancing = talentProfile.capabilities.canDoDancing
+                canDoHosting = talentProfile.capabilities.canDoHosting
+                otherCapabilities = talentProfile.capabilities.otherCapabilities
+                updatedAt = talentProfile.updatedAt
+
+                // Update languages collection - remove obsolete ones and add new ones
+                val newLanguageCodes = talentProfile.languages
+                languages.removeIf { !newLanguageCodes.contains(it.languageCode) }
+                val existingLanguageCodes = languages.map { it.languageCode }.toSet()
+                newLanguageCodes.filter { !existingLanguageCodes.contains(it) }.forEach { lang ->
+                    languages.add(TalentLanguageEntity(talentProfile = this, languageCode = lang))
+                }
+
+                // Update tags collection - remove obsolete ones and add new ones
+                val newTagNames = talentProfile.tags
+                tags.removeIf { !newTagNames.contains(it.tagName) }
+                val existingTagNames = tags.map { it.tagName }.toSet()
+                newTagNames.filter { !existingTagNames.contains(it) }.forEach { tagName ->
+                    val category = PredefinedTags.getCategoryForTag(tagName)
+                        ?: throw IllegalArgumentException("Invalid tag: $tagName")
+                    tags.add(TalentTagEntity(talentProfile = this, tagName = tagName, category = category))
+                }
+
+                // Update social links collection - remove obsolete ones and add/update existing ones
+                val newPlatforms = talentProfile.socialLinks.map { it.platform }.toSet()
+                socialLinks.removeIf { !newPlatforms.contains(it.platform) }
+                val existingPlatforms = socialLinks.map { it.platform }.toSet()
+                talentProfile.socialLinks.forEach { link ->
+                    if (!existingPlatforms.contains(link.platform)) {
+                        socialLinks.add(TalentSocialLinkEntity.fromDomain(this, link))
+                    } else {
+                        // Update existing social link
+                        socialLinks.find { it.platform == link.platform }?.apply {
+                            url = link.url
+                            followerCount = link.followerCount
+                        }
+                    }
+                }
+
+                // Update geo areas collection - remove obsolete ones and add new ones
+                val newGeoAreaKeys = talentProfile.geoAreas.map { it.city to it.country }.toSet()
+                geoAreas.removeIf { (it.city to it.country) !in newGeoAreaKeys }
+                val existingGeoAreaKeys = geoAreas.map { it.city to it.country }.toSet()
+                talentProfile.geoAreas.filter { (it.city to it.country) !in existingGeoAreaKeys }.forEach { geoArea ->
+                    geoAreas.add(TalentGeoAreaEntity.fromDomain(this, geoArea))
+                }
+                // Update isPrimary flag for existing geo areas
+                geoAreas.forEach { entity ->
+                    val domainGeoArea = talentProfile.geoAreas.find { it.city == entity.city && it.country == entity.country }
+                    domainGeoArea?.let { entity.isPrimary = it.isPrimary }
+                }
+            }
+        } else {
+            // Create new entity
+            TalentProfileEntity.fromDomain(talentProfile)
+        }
+
         val saved = talentProfileJpaRepository.save(entity)
         return saved.toDomain()
     }
@@ -34,7 +114,7 @@ class TalentRepositoryAdapter(
     }
 
     override fun findByUserId(userId: UUID): TalentProfile? {
-        return talentProfileJpaRepository.findByUserId(userId)?.toDomain()
+        return talentProfileJpaRepository.findByUserIdWithCollections(userId)?.toDomain()
     }
 
     override fun existsById(talentProfileId: UUID): Boolean {

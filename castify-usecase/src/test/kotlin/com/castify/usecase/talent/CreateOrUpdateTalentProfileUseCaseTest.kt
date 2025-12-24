@@ -1,7 +1,8 @@
 package com.castify.usecase.talent
 
+import com.castify.domain.exception.BadRequestException
+import com.castify.domain.exception.ForbiddenException
 import com.castify.domain.exception.ResourceNotFoundException
-import com.castify.domain.exception.UnauthorizedException
 import com.castify.domain.talent.GeoArea
 import com.castify.domain.talent.LocationMode
 import com.castify.domain.talent.PrimaryLocation
@@ -197,7 +198,7 @@ class CreateOrUpdateTalentProfileUseCaseTest {
     }
 
     @Test
-    fun `should throw UnauthorizedException when user is not talent`() {
+    fun `should throw ForbiddenException when user is not talent`() {
         // Given
         val userId = UUID.randomUUID()
         val user = User(
@@ -222,7 +223,7 @@ class CreateOrUpdateTalentProfileUseCaseTest {
         every { userRepository.findById(userId) } returns user
 
         // When & Then
-        val exception = assertThrows<UnauthorizedException> {
+        val exception = assertThrows<ForbiddenException> {
             createOrUpdateTalentProfileUseCase.execute(userId, request)
         }
 
@@ -232,7 +233,7 @@ class CreateOrUpdateTalentProfileUseCaseTest {
     }
 
     @Test
-    fun `should throw IllegalArgumentException when fullName is null`() {
+    fun `should throw BadRequestException when fullName is null`() {
         // Given
         val userId = UUID.randomUUID()
         val user = User(
@@ -257,7 +258,7 @@ class CreateOrUpdateTalentProfileUseCaseTest {
         every { userRepository.findById(userId) } returns user
 
         // When & Then
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<BadRequestException> {
             createOrUpdateTalentProfileUseCase.execute(userId, request)
         }
 

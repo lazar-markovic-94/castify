@@ -172,9 +172,12 @@ class TalentProfileEntity(
 
             // Add tags
             entity.tags = profile.tags.map { tag ->
+                val category = PredefinedTags.getCategoryForTag(tag)
+                    ?: throw IllegalArgumentException("Invalid tag: $tag")
                 TalentTagEntity(
                     talentProfile = entity,
-                    tagName = tag
+                    tagName = tag,
+                    category = category
                 )
             }.toMutableSet()
 
@@ -220,7 +223,11 @@ class TalentTagEntity(
     var talentProfile: TalentProfileEntity,
 
     @Column(name = "tag_name", nullable = false, length = 50)
-    var tagName: String
+    var tagName: String,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", nullable = false, length = 20)
+    var category: TagCategory
 )
 
 @Entity

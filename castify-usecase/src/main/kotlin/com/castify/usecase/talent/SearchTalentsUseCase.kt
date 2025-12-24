@@ -28,15 +28,8 @@ class SearchTalentsUseCase(
      * @return Paginated search results
      */
     fun execute(request: TalentSearchRequest): PagedResult<TalentProfileResponse> {
-        return try {
-            logger.info("Searching talents with criteria: page=${request.page}, size=${request.size}")
-
-            executeSearch(request)
-
-        } catch (e: Exception) {
-            logger.error("Error searching talents", e)
-            throw RuntimeException("Failed to search talents: ${e.message}", e)
-        }
+        logger.info("Searching talents with criteria: page=${request.page}, size=${request.size}")
+        return executeSearch(request)
     }
 
     private fun executeSearch(request: TalentSearchRequest): PagedResult<TalentProfileResponse> {

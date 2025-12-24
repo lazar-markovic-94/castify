@@ -1,5 +1,6 @@
 package com.castify.usecase.auth
 
+import com.castify.domain.exception.BadRequestException
 import com.castify.domain.exception.ConflictException
 import com.castify.domain.user.User
 import com.castify.domain.user.UserRepository
@@ -127,7 +128,7 @@ class RegisterUserUseCaseTest {
     }
 
     @Test
-    fun `should throw IllegalArgumentException when email is null`() {
+    fun `should throw BadRequestException when email is null`() {
         // Given
         val request = RegisterRequest(
             email = null,
@@ -137,7 +138,7 @@ class RegisterUserUseCaseTest {
         )
 
         // When & Then
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<BadRequestException> {
             registerUserUseCase.execute(request)
         }
 
@@ -145,7 +146,7 @@ class RegisterUserUseCaseTest {
     }
 
     @Test
-    fun `should throw IllegalArgumentException when password is null`() {
+    fun `should throw BadRequestException when password is null`() {
         // Given
         val request = RegisterRequest(
             email = "test@example.com",
@@ -155,7 +156,7 @@ class RegisterUserUseCaseTest {
         )
 
         // When & Then
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<BadRequestException> {
             registerUserUseCase.execute(request)
         }
 
@@ -163,7 +164,7 @@ class RegisterUserUseCaseTest {
     }
 
     @Test
-    fun `should throw IllegalArgumentException when role is null`() {
+    fun `should throw BadRequestException when role is null`() {
         // Given
         val request = RegisterRequest(
             email = "test@example.com",
@@ -173,7 +174,7 @@ class RegisterUserUseCaseTest {
         )
 
         // When & Then
-        val exception = assertThrows<IllegalArgumentException> {
+        val exception = assertThrows<BadRequestException> {
             registerUserUseCase.execute(request)
         }
 
