@@ -68,11 +68,31 @@ data class TalentProfile(
 
     fun removeLanguage(language: String): TalentProfile = copy(languages = languages - language, updatedAt = Instant.now())
 
-    fun updateTags(newTags: Set<String>): TalentProfile = copy(tags = newTags, updatedAt = Instant.now())
+    fun updateTags(newTags: Set<String>): TalentProfile {
+        // Validate all tags are from predefined list
+        val invalidTags = newTags.filterNot { PredefinedTags.isValidTag(it) }
+        require(invalidTags.isEmpty()) {
+            "Invalid tags: ${invalidTags.joinToString(", ")}. Valid tags are: ${PredefinedTags.getAllValidTags().joinToString(", ")}"
+        }
+        return copy(tags = newTags, updatedAt = Instant.now())
+    }
 
-    fun addTag(tag: String): TalentProfile = copy(tags = tags + tag, updatedAt = Instant.now())
+    fun addTag(tag: String): TalentProfile {
+        require(PredefinedTags.isValidTag(tag)) {
+            "Invalid tag: $tag. Valid tags are: ${PredefinedTags.getAllValidTags().joinToString(", ")}"
+        }
+        return copy(tags = tags + tag, updatedAt = Instant.now())
+    }
 
     fun removeTag(tag: String): TalentProfile = copy(tags = tags - tag, updatedAt = Instant.now())
+
+    fun getTagsByCategory(category: TagCategory): Set<String> {
+        return tags.filter { PredefinedTags.getCategoryForTag(it) == category }.toSet()
+    }
+
+    fun getPrimaryTags(): Set<String> = getTagsByCategory(TagCategory.PRIMARY)
+
+    fun getSecondaryTags(): Set<String> = getTagsByCategory(TagCategory.SECONDARY)
 
     fun updateCapabilities(newCapabilities: TalentCapabilities): TalentProfile =
         copy(capabilities = newCapabilities, updatedAt = Instant.now())

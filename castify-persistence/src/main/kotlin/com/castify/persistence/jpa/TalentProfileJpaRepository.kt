@@ -12,14 +12,14 @@ import java.util.*
 interface TalentProfileJpaRepository : JpaRepository<TalentProfileEntity, UUID> {
     fun findByUserId(userId: UUID): TalentProfileEntity?
 
-    @EntityGraph(attributePaths = ["languages", "tags", "socialLinks"])
+    @EntityGraph(attributePaths = ["languages", "tags", "socialLinks", "geoAreas"])
     override fun findById(id: UUID): Optional<TalentProfileEntity>
 
-    @EntityGraph(attributePaths = ["languages", "tags", "socialLinks"])
+    @EntityGraph(attributePaths = ["languages", "tags", "socialLinks", "geoAreas"])
     @Query("SELECT t FROM TalentProfileEntity t WHERE t.talentProfileId IN :ids")
     fun findAllByIdWithCollections(@Param("ids") ids: List<UUID>): List<TalentProfileEntity>
 
-    @EntityGraph(attributePaths = ["languages", "tags", "socialLinks"])
+    @EntityGraph(attributePaths = ["languages", "tags", "socialLinks", "geoAreas"])
     @Query("SELECT t FROM TalentProfileEntity t WHERE t.userId = :userId")
     fun findByUserIdWithCollections(@Param("userId") userId: UUID): TalentProfileEntity?
 }

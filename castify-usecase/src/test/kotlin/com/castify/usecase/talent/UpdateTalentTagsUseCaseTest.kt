@@ -42,7 +42,7 @@ class UpdateTalentTagsUseCaseTest {
             geoAreas = emptySet()
         )
 
-        val tags = setOf("Actor", "Comedian", "Voice Artist")
+        val tags = setOf("acting", "voiceover", "photoshooting")
         val request = UpdateTagsRequest(tags = tags)
 
         every { talentRepository.findByUserId(userId) } returns existingProfile
@@ -74,7 +74,7 @@ class UpdateTalentTagsUseCaseTest {
             locationMode = LocationMode.REMOTE,
             primaryLocation = null,
             geoAreas = emptySet(),
-            tags = setOf("Old Tag", "Another Tag")
+            tags = setOf("acting", "voiceover")
         )
 
         val request = UpdateTagsRequest(tags = emptySet())
@@ -96,7 +96,7 @@ class UpdateTalentTagsUseCaseTest {
     fun `should throw ResourceNotFoundException when profile not found`() {
         // Given
         val userId = UUID.randomUUID()
-        val request = UpdateTagsRequest(tags = setOf("Actor"))
+        val request = UpdateTagsRequest(tags = setOf("acting"))
 
         every { talentRepository.findByUserId(userId) } returns null
 

@@ -176,6 +176,8 @@ data class TalentProfileResponse(
     val geoAreas: Set<GeoAreaDto>,
     val languages: Set<String>,
     val tags: Set<String>,
+    val primaryTags: Set<String>,
+    val secondaryTags: Set<String>,
     val capabilities: UpdateCapabilitiesRequest,
     val socialLinks: Set<SocialLinkDto>,
     val verificationStatus: VerificationStatus,
@@ -200,6 +202,8 @@ data class TalentProfileResponse(
             geoAreas = talentProfile.geoAreas.map { GeoAreaDto.fromDomain(it) }.toSet(),
             languages = talentProfile.languages,
             tags = talentProfile.tags,
+            primaryTags = talentProfile.getPrimaryTags(),
+            secondaryTags = talentProfile.getSecondaryTags(),
             capabilities = UpdateCapabilitiesRequest.fromDomain(talentProfile.capabilities),
             socialLinks = talentProfile.socialLinks.map { SocialLinkDto.fromDomain(it) }.toSet(),
             verificationStatus = talentProfile.verificationStatus,
@@ -238,3 +242,15 @@ data class PagedResult<T>(
     val totalElements: Long,
     val totalPages: Int
 )
+
+data class AvailableTagsResponse(
+    val primaryTags: Set<String>,
+    val secondaryTags: Set<String>
+) {
+    companion object {
+        fun create(): AvailableTagsResponse = AvailableTagsResponse(
+            primaryTags = PredefinedTags.PRIMARY,
+            secondaryTags = PredefinedTags.SECONDARY
+        )
+    }
+}

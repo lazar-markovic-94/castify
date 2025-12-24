@@ -56,7 +56,8 @@ class TalentController(
     @Operation(summary = "Update talent profile image")
     fun updateProfileImage(@RequestBody request: Map<String, String>): TalentProfileResponse {
         val userId = SecurityUtils.getCurrentUserId()
-        val imageUrl = request["profileImageUrl"] ?: throw IllegalArgumentException("Profile image URL is required")
+        val imageUrl = request["profileImageUrl"]
+            ?: throw com.castify.domain.exception.BadRequestException("Profile image URL is required")
         return createOrUpdateTalentProfileUseCase.updateProfileImage(userId, imageUrl)
     }
 
@@ -121,5 +122,11 @@ class TalentController(
     @Operation(summary = "Search talents with pagination")
     fun searchTalents(@RequestBody request: TalentSearchRequest): PagedResult<TalentProfileResponse> {
         return searchTalentsUseCase.execute(request)
+    }
+
+    @GetMapping("/available-tags")
+    @Operation(summary = "Get available talent tags (primary and secondary)")
+    fun getAvailableTags(): AvailableTagsResponse {
+        return AvailableTagsResponse.create()
     }
 }
