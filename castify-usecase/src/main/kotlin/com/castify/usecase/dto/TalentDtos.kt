@@ -3,6 +3,7 @@ package com.castify.usecase.dto
 import com.castify.domain.talent.*
 import com.castify.domain.rating.TalentTier
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
@@ -136,35 +137,12 @@ data class UpdateCapabilitiesRequest(
     }
 }
 
-data class UpdateSocialLinksRequest(
-    val socialLinks: Set<SocialLinkDto>?
+data class UpdateIntroductionVideoRequest(
+    @field:NotBlank(message = "Introduction video URL is required")
+    val introductionVideoUrl: String?,
+    @field:NotNull(message = "Introduction video duration is required")
+    val introductionVideoDuration: Int?
 )
-
-data class SocialLinkDto(
-    @field:NotBlank(message = "Platform is required")
-    val platform: String?,
-    @field:NotBlank(message = "URL is required")
-    val url: String?,
-    val followerCount: Long? = null
-) {
-    fun toDomain(): SocialLink {
-        val platformValue = requireNotNull(platform) { "Platform is required" }
-        val urlValue = requireNotNull(url) { "URL is required" }
-        return SocialLink(
-            platform = platformValue,
-            url = urlValue,
-            followerCount = followerCount
-        )
-    }
-
-    companion object {
-        fun fromDomain(socialLink: SocialLink): SocialLinkDto = SocialLinkDto(
-            platform = socialLink.platform,
-            url = socialLink.url,
-            followerCount = socialLink.followerCount
-        )
-    }
-}
 
 data class TalentProfileResponse(
     val talentProfileId: UUID,
@@ -179,9 +157,10 @@ data class TalentProfileResponse(
     val primaryTags: Set<String>,
     val secondaryTags: Set<String>,
     val capabilities: UpdateCapabilitiesRequest,
-    val socialLinks: Set<SocialLinkDto>,
     val verificationStatus: VerificationStatus,
     val profileImageUrl: String?,
+    val introductionVideoUrl: String?,
+    val introductionVideoDuration: Int?,
     val createdAt: Instant,
     val updatedAt: Instant,
     // Rating and statistics
@@ -205,9 +184,10 @@ data class TalentProfileResponse(
             primaryTags = talentProfile.getPrimaryTags(),
             secondaryTags = talentProfile.getSecondaryTags(),
             capabilities = UpdateCapabilitiesRequest.fromDomain(talentProfile.capabilities),
-            socialLinks = talentProfile.socialLinks.map { SocialLinkDto.fromDomain(it) }.toSet(),
             verificationStatus = talentProfile.verificationStatus,
             profileImageUrl = talentProfile.profileImageUrl,
+            introductionVideoUrl = talentProfile.introductionVideoUrl,
+            introductionVideoDuration = talentProfile.introductionVideoDuration,
             createdAt = talentProfile.createdAt,
             updatedAt = talentProfile.updatedAt
         )

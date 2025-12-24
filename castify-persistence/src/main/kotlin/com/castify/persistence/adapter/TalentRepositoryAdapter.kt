@@ -8,7 +8,6 @@ import com.castify.domain.talent.TalentSearchCriteria
 import com.castify.persistence.entity.TalentGeoAreaEntity
 import com.castify.persistence.entity.TalentLanguageEntity
 import com.castify.persistence.entity.TalentProfileEntity
-import com.castify.persistence.entity.TalentSocialLinkEntity
 import com.castify.persistence.entity.TalentTagEntity
 import com.castify.persistence.jpa.TalentProfileJpaRepository
 import jakarta.persistence.EntityManager
@@ -42,6 +41,8 @@ class TalentRepositoryAdapter(
                 primaryCountry = talentProfile.primaryLocation?.country
                 verificationStatus = talentProfile.verificationStatus
                 profileImageUrl = talentProfile.profileImageUrl
+                introductionVideoUrl = talentProfile.introductionVideoUrl
+                introductionVideoDuration = talentProfile.introductionVideoDuration
                 canDoVoiceover = talentProfile.capabilities.canDoVoiceover
                 canDoActing = talentProfile.capabilities.canDoActing
                 canDoModeling = talentProfile.capabilities.canDoModeling
@@ -67,22 +68,6 @@ class TalentRepositoryAdapter(
                     val category = PredefinedTags.getCategoryForTag(tagName)
                         ?: throw IllegalArgumentException("Invalid tag: $tagName")
                     tags.add(TalentTagEntity(talentProfile = this, tagName = tagName, category = category))
-                }
-
-                // Update social links collection - remove obsolete ones and add/update existing ones
-                val newPlatforms = talentProfile.socialLinks.map { it.platform }.toSet()
-                socialLinks.removeIf { !newPlatforms.contains(it.platform) }
-                val existingPlatforms = socialLinks.map { it.platform }.toSet()
-                talentProfile.socialLinks.forEach { link ->
-                    if (!existingPlatforms.contains(link.platform)) {
-                        socialLinks.add(TalentSocialLinkEntity.fromDomain(this, link))
-                    } else {
-                        // Update existing social link
-                        socialLinks.find { it.platform == link.platform }?.apply {
-                            url = link.url
-                            followerCount = link.followerCount
-                        }
-                    }
                 }
 
                 // Update geo areas collection - remove obsolete ones and add new ones

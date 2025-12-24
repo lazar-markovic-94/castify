@@ -59,25 +59,21 @@ data class TalentStatistics(
         hasProfileImage: Boolean,
         languagesCount: Int,
         tagsCount: Int,
-        capabilitiesCount: Int,
-        socialLinksCount: Int
+        capabilitiesCount: Int
     ): Int {
         var score = 0
 
-        // Basic info (40 points)
-        if (hasBio) score += 10
-        if (hasLocation) score += 10
+        // Basic info (50 points)
+        if (hasBio) score += 15
+        if (hasLocation) score += 15
         if (hasProfileImage) score += 20
 
-        // Skills and capabilities (30 points)
-        if (languagesCount > 0) score += 10
-        if (tagsCount >= 3) score += 10
+        // Skills and capabilities (50 points)
+        if (languagesCount > 0) score += 15
+        if (languagesCount >= 2) score += 5  // Bonus for multiple languages
+        if (tagsCount >= 3) score += 15
+        if (tagsCount >= 5) score += 5  // Bonus for comprehensive tags
         if (capabilitiesCount > 0) score += 10
-
-        // Social proof (30 points)
-        if (socialLinksCount >= 1) score += 10
-        if (socialLinksCount >= 2) score += 10
-        if (socialLinksCount >= 3) score += 10
 
         return score.coerceIn(0, 100)
     }

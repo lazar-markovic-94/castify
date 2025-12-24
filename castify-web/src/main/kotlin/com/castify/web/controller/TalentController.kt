@@ -21,7 +21,7 @@ class TalentController(
     private val updateTalentLanguagesUseCase: UpdateTalentLanguagesUseCase,
     private val updateTalentTagsUseCase: UpdateTalentTagsUseCase,
     private val updateTalentCapabilitiesUseCase: UpdateTalentCapabilitiesUseCase,
-    private val updateTalentSocialLinksUseCase: UpdateTalentSocialLinksUseCase,
+    private val updateTalentIntroductionVideoUseCase: UpdateTalentIntroductionVideoUseCase,
     private val searchTalentsUseCase: SearchTalentsUseCase
 ) {
 
@@ -111,11 +111,11 @@ class TalentController(
         return updateTalentCapabilitiesUseCase.execute(userId, request)
     }
 
-    @PutMapping("/social-links")
-    @Operation(summary = "Update talent social links")
-    fun updateSocialLinks(@Valid @RequestBody request: UpdateSocialLinksRequest): TalentProfileResponse {
+    @PutMapping("/introduction-video")
+    @Operation(summary = "Update talent introduction video (max 30 seconds)")
+    fun updateIntroductionVideo(@Valid @RequestBody request: UpdateIntroductionVideoRequest): TalentProfileResponse {
         val userId = SecurityUtils.getCurrentUserId()
-        return updateTalentSocialLinksUseCase.execute(userId, request)
+        return updateTalentIntroductionVideoUseCase.execute(userId, request)
     }
 
     @PostMapping("/search")
