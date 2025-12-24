@@ -43,8 +43,7 @@ class UpdateProfileCompletenessUseCase(
                 hasProfileImage = !profile.profileImageUrl.isNullOrBlank(),
                 languagesCount = profile.languages.size,
                 tagsCount = profile.tags.size,
-                capabilitiesCount = profile.capabilities.countActiveCapabilities(),
-                socialLinksCount = profile.socialLinks.size
+                capabilitiesCount = profile.capabilities.countActiveCapabilities()
             )
 
             val updatedStats = statistics.copy(

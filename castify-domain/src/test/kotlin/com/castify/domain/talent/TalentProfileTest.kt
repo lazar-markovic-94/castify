@@ -36,9 +36,6 @@ class TalentProfileTest {
         val languages = setOf("English", "Spanish")
         val tags = setOf("voice-acting", "commercial")
         val capabilities = TalentCapabilities(canDoVoiceover = true)
-        val socialLinks = setOf(
-            SocialLink("Twitter", "https://twitter.com/jane", 1000)
-        )
 
         // When
         val profile = TalentProfile(
@@ -52,7 +49,6 @@ class TalentProfileTest {
             languages = languages,
             tags = tags,
             capabilities = capabilities,
-            socialLinks = socialLinks,
             verificationStatus = VerificationStatus.VERIFIED
         )
 
@@ -68,7 +64,6 @@ class TalentProfileTest {
         assertEquals(languages, profile.languages)
         assertEquals(tags, profile.tags)
         assertEquals(capabilities, profile.capabilities)
-        assertEquals(socialLinks, profile.socialLinks)
         assertEquals(VerificationStatus.VERIFIED, profile.verificationStatus)
     }
 
@@ -82,7 +77,6 @@ class TalentProfileTest {
         assertNull(profile.bio)
         assertTrue(profile.languages.isEmpty())
         assertTrue(profile.tags.isEmpty())
-        assertTrue(profile.socialLinks.isEmpty())
         assertEquals(VerificationStatus.PENDING, profile.verificationStatus)
     }
 
@@ -282,37 +276,6 @@ class TalentProfileTest {
 
         // Then
         assertEquals(newCapabilities, updatedProfile.capabilities)
-    }
-
-    @Test
-    fun `should add social link`() {
-        // Given
-        val profile = createValidTalentProfile()
-        val socialLink = SocialLink("Instagram", "https://instagram.com/profile", 5000)
-
-        // When
-        val updatedProfile = profile.addSocialLink(socialLink)
-
-        // Then
-        assertTrue(updatedProfile.socialLinks.contains(socialLink))
-        assertEquals(1, updatedProfile.socialLinks.size)
-    }
-
-    @Test
-    fun `should remove social link by platform`() {
-        // Given
-        val profile = createValidTalentProfile()
-        val link1 = SocialLink("Twitter", "https://twitter.com/profile", 1000)
-        val link2 = SocialLink("Instagram", "https://instagram.com/profile", 2000)
-        val profileWithLinks = profile.copy(socialLinks = setOf(link1, link2))
-
-        // When
-        val updatedProfile = profileWithLinks.removeSocialLink("Twitter")
-
-        // Then
-        assertFalse(updatedProfile.socialLinks.any { it.platform == "Twitter" })
-        assertTrue(updatedProfile.socialLinks.any { it.platform == "Instagram" })
-        assertEquals(1, updatedProfile.socialLinks.size)
     }
 
     @Test
@@ -545,85 +508,5 @@ class TalentCapabilitiesTest {
 
         // Then
         assertFalse(capabilities.hasAnyCapability())
-    }
-}
-
-class SocialLinkTest {
-
-    @Test
-    fun `should create valid social link`() {
-        // When
-        val socialLink = SocialLink(
-            platform = "Instagram",
-            url = "https://instagram.com/user",
-            followerCount = 10000
-        )
-
-        // Then
-        assertEquals("Instagram", socialLink.platform)
-        assertEquals("https://instagram.com/user", socialLink.url)
-        assertEquals(10000, socialLink.followerCount)
-    }
-
-    @Test
-    fun `should create social link without follower count`() {
-        // When
-        val socialLink = SocialLink(
-            platform = "Twitter",
-            url = "https://twitter.com/user"
-        )
-
-        // Then
-        assertEquals("Twitter", socialLink.platform)
-        assertEquals("https://twitter.com/user", socialLink.url)
-        assertNull(socialLink.followerCount)
-    }
-
-    @Test
-    fun `should throw exception when platform is blank`() {
-        // When & Then
-        val exception = assertThrows<IllegalArgumentException> {
-            SocialLink(
-                platform = "",
-                url = "https://instagram.com/user"
-            )
-        }
-
-        assertEquals("Platform cannot be blank", exception.message)
-    }
-
-    @Test
-    fun `should throw exception when URL is blank`() {
-        // When & Then
-        val exception = assertThrows<IllegalArgumentException> {
-            SocialLink(
-                platform = "Instagram",
-                url = ""
-            )
-        }
-
-        assertEquals("URL cannot be blank", exception.message)
-    }
-
-    @Test
-    fun `should throw exception when URL does not start with http or https`() {
-        // When & Then
-        val exception = assertThrows<IllegalArgumentException> {
-            SocialLink(
-                platform = "Instagram",
-                url = "www.instagram.com/user"
-            )
-        }
-
-        assertEquals("URL must start with http:// or https://", exception.message)
-    }
-
-    @Test
-    fun `should accept both http and https URLs`() {
-        val httpLink = SocialLink("Twitter", "http://twitter.com/user")
-        val httpsLink = SocialLink("Instagram", "https://instagram.com/user")
-
-        assertEquals("http://twitter.com/user", httpLink.url)
-        assertEquals("https://instagram.com/user", httpsLink.url)
     }
 }

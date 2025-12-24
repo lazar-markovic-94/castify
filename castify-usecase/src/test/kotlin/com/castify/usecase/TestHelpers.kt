@@ -42,7 +42,6 @@ object TestHelpers {
         languages: Set<String> = emptySet(),
         tags: Set<String> = emptySet(),
         capabilities: TalentCapabilities = TalentCapabilities(),
-        socialLinks: Set<SocialLink> = emptySet(),
         verificationStatus: VerificationStatus = VerificationStatus.PENDING,
         profileImageUrl: String? = null
     ) = TalentProfile(
@@ -56,7 +55,6 @@ object TestHelpers {
         languages = languages,
         tags = tags,
         capabilities = capabilities,
-        socialLinks = socialLinks,
         verificationStatus = verificationStatus,
         profileImageUrl = profileImageUrl
     )

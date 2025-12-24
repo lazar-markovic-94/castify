@@ -51,12 +51,6 @@ class UpdateProfileCompletenessUseCaseTest {
                 canDoSinging = false,
                 canDoDancing = false,
                 canDoHosting = false
-            ),
-            socialLinks = setOf(
-                com.castify.domain.talent.SocialLink(
-                    platform = "INSTAGRAM",
-                    url = "https://instagram.com/john"
-                )
             )
         )
 

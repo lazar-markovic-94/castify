@@ -45,6 +45,12 @@ class TalentProfileEntity(
     @Column(name = "profile_image_url")
     var profileImageUrl: String? = null,
 
+    @Column(name = "introduction_video_url")
+    var introductionVideoUrl: String? = null,
+
+    @Column(name = "introduction_video_duration")
+    var introductionVideoDuration: Int? = null,
+
     @Column(name = "can_do_voiceover", nullable = false)
     var canDoVoiceover: Boolean = false,
 
@@ -92,9 +98,6 @@ class TalentProfileEntity(
     var tags: MutableSet<TalentTagEntity> = mutableSetOf()
 
     @OneToMany(mappedBy = "talentProfile", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
-    var socialLinks: MutableSet<TalentSocialLinkEntity> = mutableSetOf()
-
-    @OneToMany(mappedBy = "talentProfile", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var geoAreas: MutableSet<TalentGeoAreaEntity> = mutableSetOf()
 
     fun toDomain(): TalentProfile {
@@ -129,9 +132,10 @@ class TalentProfileEntity(
             languages = languages.map { it.languageCode }.toSet(),
             tags = tags.map { it.tagName }.toSet(),
             capabilities = capabilities,
-            socialLinks = socialLinks.map { it.toDomain() }.toSet(),
             verificationStatus = verificationStatus,
             profileImageUrl = profileImageUrl,
+            introductionVideoUrl = introductionVideoUrl,
+            introductionVideoDuration = introductionVideoDuration,
             createdAt = createdAt,
             updatedAt = updatedAt
         )
@@ -151,6 +155,8 @@ class TalentProfileEntity(
                 primaryCountry = profile.primaryLocation?.country,
                 verificationStatus = profile.verificationStatus,
                 profileImageUrl = profile.profileImageUrl,
+                introductionVideoUrl = profile.introductionVideoUrl,
+                introductionVideoDuration = profile.introductionVideoDuration,
                 canDoVoiceover = profile.capabilities.canDoVoiceover,
                 canDoActing = profile.capabilities.canDoActing,
                 canDoModeling = profile.capabilities.canDoModeling,
@@ -179,11 +185,6 @@ class TalentProfileEntity(
                     tagName = tag,
                     category = category
                 )
-            }.toMutableSet()
-
-            // Add social links
-            entity.socialLinks = profile.socialLinks.map { link ->
-                TalentSocialLinkEntity.fromDomain(entity, link)
             }.toMutableSet()
 
             // Add geo areas
@@ -229,44 +230,6 @@ class TalentTagEntity(
     @Column(name = "category", nullable = false, length = 20)
     var category: TagCategory
 )
-
-@Entity
-@Table(name = "talent_social_link")
-class TalentSocialLinkEntity(
-    @Id
-    @Column(name = "social_link_id", columnDefinition = "UUID")
-    var socialLinkId: UUID = UUID.randomUUID(),
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "talent_profile_id", nullable = false)
-    var talentProfile: TalentProfileEntity,
-
-    @Column(nullable = false, length = 50)
-    var platform: String,
-
-    @Column(nullable = false)
-    var url: String,
-
-    @Column(name = "follower_count")
-    var followerCount: Long? = null
-) {
-    fun toDomain(): SocialLink = SocialLink(
-        platform = platform,
-        url = url,
-        followerCount = followerCount
-    )
-
-    companion object {
-        fun fromDomain(talentProfile: TalentProfileEntity, link: SocialLink): TalentSocialLinkEntity =
-            TalentSocialLinkEntity(
-                socialLinkId = UUID.randomUUID(),
-                talentProfile = talentProfile,
-                platform = link.platform,
-                url = link.url,
-                followerCount = link.followerCount
-            )
-    }
-}
 
 @Entity
 @Table(name = "talent_geo_area")

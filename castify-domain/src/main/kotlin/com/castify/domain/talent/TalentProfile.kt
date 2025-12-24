@@ -15,9 +15,10 @@ data class TalentProfile(
     val languages: Set<String> = emptySet(),
     val tags: Set<String> = emptySet(),
     val capabilities: TalentCapabilities = TalentCapabilities(),
-    val socialLinks: Set<SocialLink> = emptySet(),
     val verificationStatus: VerificationStatus = VerificationStatus.PENDING,
     val profileImageUrl: String? = null,
+    val introductionVideoUrl: String? = null,
+    val introductionVideoDuration: Int? = null, // Duration in seconds
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = Instant.now()
 ) {
@@ -30,6 +31,21 @@ data class TalentProfile(
         }
         require(geoAreas.count { it.isPrimary } <= 1) {
             "Only one geo area can be marked as primary"
+        }
+        // Validate introduction video duration if provided
+        if (introductionVideoDuration != null) {
+            require(introductionVideoDuration > 0) {
+                "Introduction video duration must be positive"
+            }
+            require(introductionVideoDuration <= 30) {
+                "Introduction video must be 30 seconds or less"
+            }
+        }
+        // If duration is provided, URL must also be provided
+        if (introductionVideoDuration != null) {
+            require(!introductionVideoUrl.isNullOrBlank()) {
+                "Introduction video URL is required when duration is provided"
+            }
         }
     }
 
@@ -97,10 +113,19 @@ data class TalentProfile(
     fun updateCapabilities(newCapabilities: TalentCapabilities): TalentProfile =
         copy(capabilities = newCapabilities, updatedAt = Instant.now())
 
-    fun addSocialLink(link: SocialLink): TalentProfile = copy(socialLinks = socialLinks + link, updatedAt = Instant.now())
-
-    fun removeSocialLink(platform: String): TalentProfile =
-        copy(socialLinks = socialLinks.filterNot { it.platform == platform }.toSet(), updatedAt = Instant.now())
+    fun updateIntroductionVideo(videoUrl: String?, duration: Int?): TalentProfile {
+        // Validate that both are provided together or both are null
+        if (videoUrl != null || duration != null) {
+            require(!videoUrl.isNullOrBlank()) { "Introduction video URL cannot be blank" }
+            require(duration != null && duration > 0) { "Introduction video duration must be positive" }
+            require(duration <= 30) { "Introduction video must be 30 seconds or less" }
+        }
+        return copy(
+            introductionVideoUrl = videoUrl,
+            introductionVideoDuration = duration,
+            updatedAt = Instant.now()
+        )
+    }
 
     fun verify(): TalentProfile = copy(verificationStatus = VerificationStatus.VERIFIED, updatedAt = Instant.now())
 
@@ -163,18 +188,6 @@ data class TalentCapabilities(
 ) {
     fun hasAnyCapability(): Boolean =
         canDoVoiceover || canDoActing || canDoModeling || canDoSinging || canDoDancing || canDoHosting
-}
-
-data class SocialLink(
-    val platform: String,
-    val url: String,
-    val followerCount: Long? = null
-) {
-    init {
-        require(platform.isNotBlank()) { "Platform cannot be blank" }
-        require(url.isNotBlank()) { "URL cannot be blank" }
-        require(url.matches(Regex("^https?://.*"))) { "URL must start with http:// or https://" }
-    }
 }
 
 enum class VerificationStatus {
