@@ -21,18 +21,6 @@ data class CreateCollaborationRequestDto(
     val notes: String?
 )
 
-/**
- * Request DTO for updating collaboration details
- */
-data class UpdateCollaborationRequestDto(
-    val title: String?,
-    val description: String?,
-    val budget: BigDecimal?,
-    val startDate: Instant?,
-    val endDate: Instant?,
-    val notes: String?
-)
-
 // ==================== Response DTOs ====================
 
 /**

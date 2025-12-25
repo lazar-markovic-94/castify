@@ -28,11 +28,6 @@ class MediaRepositoryAdapter(
             .orElse(null)
     }
 
-    override fun findMediaAssetsByUploader(uploadedByUserId: UUID): List<MediaAsset> {
-        return mediaAssetJpaRepository.findByUploadedByUserId(uploadedByUserId)
-            .map { it.toDomain() }
-    }
-
     override fun savePortfolioItem(portfolioItem: PortfolioItem): PortfolioItem {
         val entity = PortfolioItemEntity.fromDomain(portfolioItem)
         val saved = portfolioItemJpaRepository.save(entity)

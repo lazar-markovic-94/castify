@@ -24,17 +24,6 @@ interface TalentStatisticsRepository {
     fun findByTalentProfileIds(talentProfileIds: List<UUID>): List<TalentStatistics>
 
     /**
-     * Find talents by tier
-     */
-    fun findByTier(tier: TalentTier): List<TalentStatistics>
-
-    /**
-     * Find talents with minimum average rating
-     * Used for filtering in search
-     */
-    fun findByMinimumAverageRating(minimumRating: Double): List<TalentStatistics>
-
-    /**
      * Find top rated talents
      * Returns talents ordered by average rating descending
      */
@@ -45,14 +34,4 @@ interface TalentStatisticsRepository {
      * Returns talents ordered by completed collaborations descending
      */
     fun findMostSuccessful(limit: Int): List<TalentStatistics>
-
-    /**
-     * Delete statistics by talent profile ID
-     */
-    fun deleteByTalentProfileId(talentProfileId: UUID)
-
-    /**
-     * Check if statistics exist for a talent profile
-     */
-    fun existsByTalentProfileId(talentProfileId: UUID): Boolean
 }

@@ -49,10 +49,6 @@ data class TalentProfile(
         }
     }
 
-    fun updateBio(newBio: String?): TalentProfile = copy(bio = newBio, updatedAt = Instant.now())
-
-    fun updateLocationMode(newMode: LocationMode): TalentProfile = copy(locationMode = newMode, updatedAt = Instant.now())
-
     fun updatePrimaryLocation(newLocation: PrimaryLocation): TalentProfile =
         copy(primaryLocation = newLocation, updatedAt = Instant.now())
 
@@ -80,10 +76,6 @@ data class TalentProfile(
 
     fun updateLanguages(newLanguages: Set<String>): TalentProfile = copy(languages = newLanguages, updatedAt = Instant.now())
 
-    fun addLanguage(language: String): TalentProfile = copy(languages = languages + language, updatedAt = Instant.now())
-
-    fun removeLanguage(language: String): TalentProfile = copy(languages = languages - language, updatedAt = Instant.now())
-
     fun updateTags(newTags: Set<String>): TalentProfile {
         // Validate all tags are from predefined list
         val invalidTags = newTags.filterNot { PredefinedTags.isValidTag(it) }
@@ -93,22 +85,9 @@ data class TalentProfile(
         return copy(tags = newTags, updatedAt = Instant.now())
     }
 
-    fun addTag(tag: String): TalentProfile {
-        require(PredefinedTags.isValidTag(tag)) {
-            "Invalid tag: $tag. Valid tags are: ${PredefinedTags.getAllValidTags().joinToString(", ")}"
-        }
-        return copy(tags = tags + tag, updatedAt = Instant.now())
-    }
+    fun getPrimaryTags(): Set<String> = tags.filter { PredefinedTags.getCategoryForTag(it) == TagCategory.PRIMARY }.toSet()
 
-    fun removeTag(tag: String): TalentProfile = copy(tags = tags - tag, updatedAt = Instant.now())
-
-    fun getTagsByCategory(category: TagCategory): Set<String> {
-        return tags.filter { PredefinedTags.getCategoryForTag(it) == category }.toSet()
-    }
-
-    fun getPrimaryTags(): Set<String> = getTagsByCategory(TagCategory.PRIMARY)
-
-    fun getSecondaryTags(): Set<String> = getTagsByCategory(TagCategory.SECONDARY)
+    fun getSecondaryTags(): Set<String> = tags.filter { PredefinedTags.getCategoryForTag(it) == TagCategory.SECONDARY }.toSet()
 
     fun updateCapabilities(newCapabilities: TalentCapabilities): TalentProfile =
         copy(capabilities = newCapabilities, updatedAt = Instant.now())
@@ -187,7 +166,7 @@ data class TalentCapabilities(
     val otherCapabilities: String? = null
 ) {
     fun hasAnyCapability(): Boolean =
-        canDoVoiceover || canDoActing || canDoModeling || canDoSinging || canDoDancing || canDoHosting
+        canDoVoiceover || canDoActing || canDoModeling || canDoSinging || canDoDancing || canDoHosting || !otherCapabilities.isNullOrBlank()
 }
 
 enum class VerificationStatus {

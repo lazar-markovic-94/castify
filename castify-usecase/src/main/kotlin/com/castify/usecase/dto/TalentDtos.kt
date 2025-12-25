@@ -18,12 +18,6 @@ data class CreateTalentProfileRequest(
     val profileImageUrl: String? = null
 )
 
-data class UpdateTalentProfileRequest(
-    val fullName: String? = null,
-    val bio: String? = null,
-    val profileImageUrl: String? = null
-)
-
 data class PrimaryLocationDto(
     val latitude: BigDecimal?,
     val longitude: BigDecimal?,

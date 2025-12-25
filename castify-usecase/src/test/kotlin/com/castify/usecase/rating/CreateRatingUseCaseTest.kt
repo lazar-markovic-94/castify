@@ -4,9 +4,6 @@ import com.castify.domain.exception.BadRequestException
 import com.castify.domain.exception.ResourceNotFoundException
 import com.castify.domain.rating.TalentRating
 import com.castify.domain.rating.TalentRatingRepository
-import com.castify.domain.rating.TalentStatistics
-import com.castify.domain.rating.TalentStatisticsRepository
-import com.castify.domain.rating.TalentTier
 import com.castify.domain.talent.LocationMode
 import com.castify.domain.talent.TalentProfile
 import com.castify.domain.talent.TalentRepository
@@ -25,35 +22,23 @@ import java.util.*
 class CreateRatingUseCaseTest {
 
     private lateinit var ratingRepository: TalentRatingRepository
-    private lateinit var statisticsRepository: TalentStatisticsRepository
     private lateinit var talentRepository: TalentRepository
+    private lateinit var statisticsService: TalentStatisticsService
     private lateinit var createRatingUseCase: CreateRatingUseCase
 
     @BeforeEach
     fun setUp() {
         ratingRepository = mockk()
-        statisticsRepository = mockk()
         talentRepository = mockk()
-        createRatingUseCase = CreateRatingUseCase(ratingRepository, statisticsRepository, talentRepository)
+        statisticsService = mockk(relaxed = true)
+        createRatingUseCase = CreateRatingUseCase(ratingRepository, talentRepository, statisticsService)
     }
 
     @Test
-    fun `should successfully create rating and update statistics`() {
+    fun `should successfully create rating`() {
         // Given
         val clientUserId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
-
-        val talentProfile = TestHelpers.createValidTalentProfile(
-            talentProfileId = talentProfileId,
-            userId = UUID.randomUUID(),
-            fullName = "John Actor",
-            bio = "Bio",
-            locationMode = LocationMode.REMOTE,
-            primaryLocation = null,
-            geoAreas = emptySet()
-        )
-
-        val statistics = TalentStatistics.createInitial(talentProfileId, 50)
 
         val request = CreateRatingRequest(
             talentProfileId = talentProfileId,
@@ -69,9 +54,7 @@ class CreateRatingUseCaseTest {
 
         every { talentRepository.existsById(talentProfileId) } returns true
         every { ratingRepository.findByTalentProfileIdAndClientUserIdAndCollaborationId(talentProfileId, clientUserId, request.collaborationId!!) } returns null
-        every { statisticsRepository.findByTalentProfileId(talentProfileId) } returns statistics
         every { ratingRepository.save(any()) } answers { firstArg() }
-        every { statisticsRepository.save(any()) } answers { firstArg() }
 
         // When
         val result = createRatingUseCase.execute(clientUserId, request)
@@ -81,9 +64,11 @@ class CreateRatingUseCaseTest {
         assertEquals(5, result.overallRating)
         assertEquals("Excellent work!", result.reviewText)
         assertTrue(result.wouldWorkAgain)
+        assertTrue(result.isVerified) // Verified because it has collaboration ID
 
+        // Verify statistics service was called
         verify(exactly = 1) { ratingRepository.save(any()) }
-        verify(exactly = 1) { statisticsRepository.save(any()) }
+        verify(exactly = 1) { statisticsService.updateWithNewRating(any()) }
     }
 
     @Test
@@ -144,20 +129,10 @@ class CreateRatingUseCaseTest {
     }
 
     @Test
-    fun `should create initial statistics if none exist`() {
+    fun `should create unverified rating when no collaboration ID provided`() {
         // Given
         val clientUserId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
-
-        val talentProfile = TestHelpers.createValidTalentProfile(
-            talentProfileId = talentProfileId,
-            userId = UUID.randomUUID(),
-            fullName = "John Actor",
-            bio = "Bio",
-            locationMode = LocationMode.REMOTE,
-            primaryLocation = null,
-            geoAreas = emptySet()
-        )
 
         val request = CreateRatingRequest(
             talentProfileId = talentProfileId,
@@ -172,16 +147,15 @@ class CreateRatingUseCaseTest {
         )
 
         every { talentRepository.existsById(talentProfileId) } returns true
-        every { statisticsRepository.findByTalentProfileId(talentProfileId) } returns null
         every { ratingRepository.save(any()) } answers { firstArg() }
-        every { statisticsRepository.save(any()) } answers { firstArg() }
 
         // When
         val result = createRatingUseCase.execute(clientUserId, request)
 
         // Then
         assertNotNull(result)
-        verify(exactly = 1) { statisticsRepository.save(any()) }
+        assertFalse(result.isVerified) // Not verified because no collaboration ID
+        verify(exactly = 1) { ratingRepository.save(any()) }
     }
 
     @Test
@@ -189,18 +163,6 @@ class CreateRatingUseCaseTest {
         // Given
         val clientUserId = UUID.randomUUID()
         val talentProfileId = UUID.randomUUID()
-
-        val talentProfile = TestHelpers.createValidTalentProfile(
-            talentProfileId = talentProfileId,
-            userId = UUID.randomUUID(),
-            fullName = "John Actor",
-            bio = "Bio",
-            locationMode = LocationMode.REMOTE,
-            primaryLocation = null,
-            geoAreas = emptySet()
-        )
-
-        val statistics = TalentStatistics.createInitial(talentProfileId, 50)
 
         val request = CreateRatingRequest(
             talentProfileId = talentProfileId,
@@ -215,9 +177,7 @@ class CreateRatingUseCaseTest {
         )
 
         every { talentRepository.existsById(talentProfileId) } returns true
-        every { statisticsRepository.findByTalentProfileId(talentProfileId) } returns statistics
         every { ratingRepository.save(any()) } answers { firstArg() }
-        every { statisticsRepository.save(any()) } answers { firstArg() }
 
         // When
         val result = createRatingUseCase.execute(clientUserId, request)
@@ -226,5 +186,6 @@ class CreateRatingUseCaseTest {
         assertNotNull(result)
         assertNull(result.reviewText)
         assertFalse(result.wouldWorkAgain)
+        verify(exactly = 1) { ratingRepository.save(any()) }
     }
 }

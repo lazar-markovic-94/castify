@@ -12,7 +12,5 @@ interface CollaborationRepository {
     fun findByTalentProfileId(talentProfileId: UUID): List<Collaboration>
     fun findByClientUserIdAndStatus(clientUserId: UUID, status: CollaborationStatus): List<Collaboration>
     fun findByTalentProfileIdAndStatus(talentProfileId: UUID, status: CollaborationStatus): List<Collaboration>
-    fun existsByClientAndTalent(clientUserId: UUID, talentProfileId: UUID): Boolean
     fun countByTalentProfileIdAndStatus(talentProfileId: UUID, status: CollaborationStatus): Int
-    fun delete(collaborationId: UUID)
 }

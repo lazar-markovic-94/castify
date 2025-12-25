@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
+import java.time.Instant
 import java.util.*
 
 class TalentProfileTest {
@@ -103,12 +104,11 @@ class TalentProfileTest {
         val newBio = "Updated bio text"
 
         // When
-        val updatedProfile = profile.updateBio(newBio)
+        val updatedProfile = profile.copy(bio = newBio, updatedAt = Instant.now())
 
         // Then
         assertEquals(newBio, updatedProfile.bio)
-        assertTrue(updatedProfile.updatedAt.isAfter(profile.updatedAt) ||
-                   updatedProfile.updatedAt == profile.updatedAt)
+        assertTrue(updatedProfile.updatedAt >= profile.updatedAt)
     }
 
     @Test
@@ -190,7 +190,7 @@ class TalentProfileTest {
         val profileWithLang = profile.copy(languages = existingLanguages)
 
         // When
-        val updatedProfile = profileWithLang.addLanguage("Spanish")
+        val updatedProfile = profileWithLang.updateLanguages(existingLanguages + "Spanish")
 
         // Then
         assertTrue(updatedProfile.languages.contains("English"))
@@ -206,7 +206,7 @@ class TalentProfileTest {
         val profileWithLangs = profile.copy(languages = existingLanguages)
 
         // When
-        val updatedProfile = profileWithLangs.removeLanguage("Spanish")
+        val updatedProfile = profileWithLangs.updateLanguages(existingLanguages - "Spanish")
 
         // Then
         assertTrue(updatedProfile.languages.contains("English"))
@@ -236,7 +236,7 @@ class TalentProfileTest {
         val profileWithTag = profile.copy(tags = existingTags)
 
         // When
-        val updatedProfile = profileWithTag.addTag("voiceover")
+        val updatedProfile = profileWithTag.updateTags(existingTags + "voiceover")
 
         // Then
         assertTrue(updatedProfile.tags.contains("acting"))
@@ -252,7 +252,7 @@ class TalentProfileTest {
         val profileWithTags = profile.copy(tags = existingTags)
 
         // When
-        val updatedProfile = profileWithTags.removeTag("voiceover")
+        val updatedProfile = profileWithTags.updateTags(existingTags - "voiceover")
 
         // Then
         assertTrue(updatedProfile.tags.contains("acting"))

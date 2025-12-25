@@ -31,6 +31,7 @@ class CreateOrUpdateTalentProfileUseCaseTest {
     private lateinit var talentRepository: TalentRepository
     private lateinit var userRepository: UserRepository
     private lateinit var profileEnricher: TalentProfileEnricher
+    private lateinit var asyncStatisticsUpdateService: com.castify.usecase.upload.AsyncStatisticsUpdateService
     private lateinit var createOrUpdateTalentProfileUseCase: CreateOrUpdateTalentProfileUseCase
 
     @BeforeEach
@@ -38,7 +39,8 @@ class CreateOrUpdateTalentProfileUseCaseTest {
         talentRepository = mockk()
         userRepository = mockk()
         profileEnricher = mockk()
-        createOrUpdateTalentProfileUseCase = CreateOrUpdateTalentProfileUseCase(talentRepository, userRepository, profileEnricher)
+        asyncStatisticsUpdateService = mockk(relaxed = true)
+        createOrUpdateTalentProfileUseCase = CreateOrUpdateTalentProfileUseCase(talentRepository, userRepository, profileEnricher, asyncStatisticsUpdateService)
     }
 
     @Test

@@ -48,4 +48,12 @@ interface TalentRatingJpaRepository : JpaRepository<TalentRatingEntity, UUID> {
      * Count total ratings for a talent profile
      */
     fun countByTalentProfileId(talentProfileId: UUID): Long
+
+    /**
+     * Find all ratings for a talent profile with a specific verification status
+     */
+    fun findByTalentProfileIdAndIsVerified(
+        talentProfileId: UUID,
+        isVerified: Boolean
+    ): List<TalentRatingEntity>
 }

@@ -15,7 +15,8 @@ import java.util.*
 @Service
 @Transactional
 class UpdateTalentLocationUseCase(
-    private val talentRepository: TalentRepository
+    private val talentRepository: TalentRepository,
+    private val asyncStatisticsUpdateService: com.castify.usecase.upload.AsyncStatisticsUpdateService
 ) {
     private val logger = LoggerFactory.getLogger(UpdateTalentLocationUseCase::class.java)
 
@@ -40,6 +41,9 @@ class UpdateTalentLocationUseCase(
 
             val savedProfile = talentRepository.save(updatedProfile)
             logger.info("Successfully updated primary location for talent: ${savedProfile.talentProfileId}")
+
+            // Update profile completeness statistics in a separate transaction
+            asyncStatisticsUpdateService.updateProfileCompleteness(savedProfile.talentProfileId)
 
             TalentProfileResponse.fromDomain(savedProfile)
 

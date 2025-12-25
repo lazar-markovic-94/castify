@@ -101,25 +101,6 @@ data class Collaboration(
         )
     }
 
-    fun updateDetails(
-        title: String?,
-        description: String?,
-        budget: BigDecimal?,
-        startDate: Instant?,
-        endDate: Instant?,
-        notes: String?
-    ): Collaboration {
-        return copy(
-            title = title ?: this.title,
-            description = description ?: this.description,
-            budget = budget ?: this.budget,
-            startDate = startDate ?: this.startDate,
-            endDate = endDate ?: this.endDate,
-            notes = notes ?: this.notes,
-            updatedAt = Instant.now()
-        )
-    }
-
     fun isActive(): Boolean {
         return status in listOf(
             CollaborationStatus.PROPOSED,

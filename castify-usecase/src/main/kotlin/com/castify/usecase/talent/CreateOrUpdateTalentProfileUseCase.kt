@@ -23,7 +23,8 @@ import java.util.*
 class CreateOrUpdateTalentProfileUseCase(
     private val talentRepository: TalentRepository,
     private val userRepository: UserRepository,
-    private val profileEnricher: TalentProfileEnricher
+    private val profileEnricher: TalentProfileEnricher,
+    private val asyncStatisticsUpdateService: com.castify.usecase.upload.AsyncStatisticsUpdateService
 ) {
     private val logger = LoggerFactory.getLogger(CreateOrUpdateTalentProfileUseCase::class.java)
 
@@ -85,6 +86,9 @@ class CreateOrUpdateTalentProfileUseCase(
         val savedProfile = talentRepository.save(profile)
         logger.info("Successfully saved talent profile: ${savedProfile.talentProfileId}")
 
+        // Update profile completeness statistics asynchronously
+        asyncStatisticsUpdateService.updateProfileCompleteness(savedProfile.talentProfileId)
+
         return profileEnricher.enrichProfile(savedProfile)
     }
 
@@ -106,6 +110,9 @@ class CreateOrUpdateTalentProfileUseCase(
         val savedProfile = talentRepository.save(updatedProfile)
 
         logger.info("Successfully updated profile image for talent: ${savedProfile.talentProfileId}")
+
+        // Update profile completeness statistics asynchronously
+        asyncStatisticsUpdateService.updateProfileCompleteness(savedProfile.talentProfileId)
 
         return profileEnricher.enrichProfile(savedProfile)
     }

@@ -12,8 +12,6 @@ data class Conversation(
 ) {
     fun updateLastMessageTime(): Conversation = copy(lastMessageAt = Instant.now())
 
-    fun involvedUsers(): Set<UUID> = setOf(talentUserId, clientUserId)
-
     fun isParticipant(userId: UUID): Boolean = userId == talentUserId || userId == clientUserId
 }
 

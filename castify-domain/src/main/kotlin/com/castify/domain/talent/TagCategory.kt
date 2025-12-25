@@ -5,11 +5,6 @@ enum class TagCategory {
     SECONDARY
 }
 
-data class CategorizedTag(
-    val name: String,
-    val category: TagCategory
-)
-
 object PredefinedTags {
     val PRIMARY = setOf(
         "acting",

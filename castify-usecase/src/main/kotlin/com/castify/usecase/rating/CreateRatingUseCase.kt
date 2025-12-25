@@ -4,8 +4,6 @@ import com.castify.domain.exception.BadRequestException
 import com.castify.domain.exception.ResourceNotFoundException
 import com.castify.domain.rating.TalentRating
 import com.castify.domain.rating.TalentRatingRepository
-import com.castify.domain.rating.TalentStatistics
-import com.castify.domain.rating.TalentStatisticsRepository
 import com.castify.domain.talent.TalentRepository
 import com.castify.usecase.dto.CreateRatingRequest
 import com.castify.usecase.dto.RatingResponse
@@ -22,8 +20,8 @@ import java.util.*
 @Transactional
 class CreateRatingUseCase(
     private val ratingRepository: TalentRatingRepository,
-    private val statisticsRepository: TalentStatisticsRepository,
-    private val talentRepository: TalentRepository
+    private val talentRepository: TalentRepository,
+    private val statisticsService: TalentStatisticsService
 ) {
     private val logger = LoggerFactory.getLogger(CreateRatingUseCase::class.java)
 
@@ -76,8 +74,9 @@ class CreateRatingUseCase(
             val savedRating = ratingRepository.save(rating)
             logger.info("Successfully created rating: ${savedRating.ratingId}")
 
-            // Update talent statistics
-            updateStatisticsWithNewRating(request.talentProfileId, savedRating)
+            // Update statistics in application layer (replaces database trigger)
+            statisticsService.updateWithNewRating(savedRating)
+            logger.info("Updated statistics for talent: ${request.talentProfileId}")
 
             RatingResponse.fromDomain(savedRating)
 
@@ -90,20 +89,6 @@ class CreateRatingUseCase(
         } catch (e: Exception) {
             logger.error("Unexpected error creating rating for talent: ${request.talentProfileId}", e)
             throw RuntimeException("Failed to create rating: ${e.message}", e)
-        }
-    }
-
-    private fun updateStatisticsWithNewRating(talentProfileId: UUID, rating: TalentRating) {
-        try {
-            val currentStats = statisticsRepository.findByTalentProfileId(talentProfileId)
-                ?: TalentStatistics.createInitial(talentProfileId, 0)
-
-            val updatedStats = TalentStatistics.updateWithNewRating(currentStats, rating)
-            statisticsRepository.save(updatedStats)
-            logger.info("Updated statistics for talent: $talentProfileId")
-        } catch (e: Exception) {
-            logger.error("Failed to update statistics for talent: $talentProfileId", e)
-            // Don't fail the rating creation if statistics update fails
         }
     }
 }

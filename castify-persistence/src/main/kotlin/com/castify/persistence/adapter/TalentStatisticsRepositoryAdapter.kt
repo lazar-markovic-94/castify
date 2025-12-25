@@ -19,8 +19,36 @@ class TalentStatisticsRepositoryAdapter(
 ) : TalentStatisticsRepository {
 
     override fun save(statistics: TalentStatistics): TalentStatistics {
-        val entity = TalentStatisticsEntity.fromDomain(statistics)
-        val saved = jpaRepository.save(entity)
+        // IMPORTANT: For updates, we must fetch the existing entity first to preserve the version
+        // This ensures optimistic locking works correctly
+        val existingEntity = jpaRepository.findById(statistics.talentProfileId).orElse(null)
+
+        val entityToSave = if (existingEntity != null) {
+            // Update existing entity to preserve version for optimistic locking
+            existingEntity.apply {
+                averageRating = statistics.averageRating
+                totalRatings = statistics.totalRatings
+                averageProfessionalismRating = statistics.averageProfessionalismRating
+                averageQualityRating = statistics.averageQualityRating
+                averageCommunicationRating = statistics.averageCommunicationRating
+                averageTimelinessRating = statistics.averageTimelinessRating
+                totalCollaborations = statistics.totalCollaborations
+                completedCollaborations = statistics.completedCollaborations
+                canceledCollaborations = statistics.canceledCollaborations
+                successRate = statistics.successRate
+                totalEarnings = java.math.BigDecimal.valueOf(statistics.totalEarnings)
+                averageResponseTimeHours = statistics.averageResponseTimeHours
+                profileCompleteness = statistics.profileCompleteness
+                wouldWorkAgainPercentage = statistics.wouldWorkAgainPercentage
+                performanceTier = statistics.tier
+                lastUpdated = statistics.lastUpdated
+            }
+        } else {
+            // Create new entity for first save
+            TalentStatisticsEntity.fromDomain(statistics)
+        }
+
+        val saved = jpaRepository.save(entityToSave)
         return saved.toDomain()
     }
 
@@ -35,16 +63,6 @@ class TalentStatisticsRepositoryAdapter(
             .map { it.toDomain() }
     }
 
-    override fun findByTier(tier: TalentTier): List<TalentStatistics> {
-        return jpaRepository.findByPerformanceTier(tier)
-            .map { it.toDomain() }
-    }
-
-    override fun findByMinimumAverageRating(minimumRating: Double): List<TalentStatistics> {
-        return jpaRepository.findByMinimumAverageRating(minimumRating)
-            .map { it.toDomain() }
-    }
-
     override fun findTopRated(limit: Int): List<TalentStatistics> {
         val pageable = PageRequest.of(0, limit)
         return jpaRepository.findAllByOrderByAverageRatingDesc(pageable)
@@ -55,13 +73,5 @@ class TalentStatisticsRepositoryAdapter(
         val pageable = PageRequest.of(0, limit)
         return jpaRepository.findAllByOrderByCompletedCollaborationsDesc(pageable)
             .map { it.toDomain() }
-    }
-
-    override fun deleteByTalentProfileId(talentProfileId: UUID) {
-        jpaRepository.deleteById(talentProfileId)
-    }
-
-    override fun existsByTalentProfileId(talentProfileId: UUID): Boolean {
-        return jpaRepository.existsByTalentProfileId(talentProfileId)
     }
 }

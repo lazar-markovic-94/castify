@@ -84,3 +84,4 @@ class DatabaseException(
     cause: Throwable? = null,
     errorCode: String = "DATABASE_ERROR"
 ) : DomainException(message, errorCode, cause)
+

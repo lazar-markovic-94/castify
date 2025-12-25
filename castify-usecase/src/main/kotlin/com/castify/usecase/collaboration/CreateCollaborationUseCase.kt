@@ -7,6 +7,7 @@ import com.castify.domain.talent.TalentRepository
 import com.castify.domain.user.UserRepository
 import com.castify.usecase.dto.CollaborationResponse
 import com.castify.usecase.dto.CreateCollaborationRequestDto
+import com.castify.usecase.rating.TalentStatisticsService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -21,7 +22,8 @@ import java.util.*
 class CreateCollaborationUseCase(
     private val collaborationRepository: CollaborationRepository,
     private val talentRepository: TalentRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val statisticsService: TalentStatisticsService
 ) {
     private val logger = LoggerFactory.getLogger(CreateCollaborationUseCase::class.java)
 
@@ -59,6 +61,9 @@ class CreateCollaborationUseCase(
 
             val savedCollaboration = collaborationRepository.save(collaboration)
             logger.info("Successfully created collaboration: ${savedCollaboration.collaborationId}")
+
+            // Update statistics in application layer (replaces database trigger)
+            statisticsService.recalculateCollaborationStatistics(savedCollaboration.talentProfileId)
 
             CollaborationResponse.fromDomain(savedCollaboration)
 

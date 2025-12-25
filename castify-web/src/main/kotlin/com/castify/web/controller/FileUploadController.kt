@@ -1,5 +1,11 @@
 package com.castify.web.controller
 
+import com.castify.domain.media.ContentType
+import com.castify.usecase.upload.FileUploadException
+import com.castify.usecase.upload.UploadProfileImageUseCase
+import com.castify.usecase.upload.UploadIntroductionVideoUseCase
+import com.castify.usecase.upload.UploadPortfolioMediaUseCase
+import com.castify.web.security.SecurityUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
@@ -9,11 +15,8 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.io.File
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
 import java.util.*
 
 @RestController
@@ -21,139 +24,38 @@ import java.util.*
 @Tag(name = "File Upload", description = "File upload endpoints")
 class FileUploadController(
     @Value("\${file.upload.dir:uploads}")
-    private val uploadDir: String
+    private val uploadDir: String,
+    private val uploadProfileImageUseCase: UploadProfileImageUseCase,
+    private val uploadIntroductionVideoUseCase: UploadIntroductionVideoUseCase,
+    private val uploadPortfolioMediaUseCase: UploadPortfolioMediaUseCase
 ) {
 
     private val logger = LoggerFactory.getLogger(FileUploadController::class.java)
 
-    @PostMapping("/image", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    @Operation(summary = "Upload an image file")
-    fun uploadImage(@RequestParam("file") file: MultipartFile): ResponseEntity<Map<String, String>> {
+    @PostMapping("/profile-image", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @Operation(summary = "Upload a profile image")
+    fun uploadProfileImage(@RequestParam("file") file: MultipartFile): ResponseEntity<Map<String, String>> {
         logger.info("=".repeat(80))
-        logger.info("FILE UPLOAD REQUEST STARTED")
+        logger.info("PROFILE IMAGE UPLOAD REQUEST STARTED")
         logger.info("=".repeat(80))
         try {
-            logger.info("Upload request received - filename: ${file.originalFilename}, size: ${file.size}, contentType: ${file.contentType}")
-            logger.info("Upload directory configured as: $uploadDir")
-            logger.info("Working directory: ${System.getProperty("user.dir")}")
-            logger.info("uploadDir value: '$uploadDir' (length: ${uploadDir.length})")
+            val userId = SecurityUtils.getCurrentUserId()
+            logger.info("Profile image upload request received for user: $userId - filename: ${file.originalFilename}, size: ${file.size}, contentType: ${file.contentType}")
 
-            // Validate file
-            if (file.isEmpty) {
-                logger.warn("Upload failed: File is empty")
-                return ResponseEntity.badRequest().body(mapOf(
-                    "error" to "File is empty",
-                    "details" to "The uploaded file contains no data"
-                ))
-            }
+            val fileUrl = uploadProfileImageUseCase.execute(userId, file)
 
-            // Validate file type
-            val contentType = file.contentType
-            if (contentType == null || !contentType.startsWith("image/")) {
-                logger.warn("Upload failed: Invalid content type - $contentType")
-                return ResponseEntity.badRequest().body(mapOf(
-                    "error" to "Only image files are allowed",
-                    "details" to "Content type '$contentType' is not supported. Only image/* types are allowed."
-                ))
-            }
-
-            // Validate file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                logger.warn("Upload failed: File too large - ${file.size} bytes")
-                return ResponseEntity.badRequest().body(mapOf(
-                    "error" to "File size exceeds 5MB limit",
-                    "details" to "File size is ${file.size / 1024 / 1024}MB, maximum allowed is 5MB"
-                ))
-            }
-
-            // Create upload directory if it doesn't exist
-            val uploadPath = try {
-                Paths.get(uploadDir).toAbsolutePath()
-            } catch (e: Exception) {
-                logger.error("Failed to resolve upload path: $uploadDir", e)
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
-                    "error" to "Invalid upload directory configuration",
-                    "details" to "Could not resolve path '$uploadDir': ${e.javaClass.simpleName} - ${e.message}",
-                    "path" to uploadDir
-                ))
-            }
-
-            logger.info("Upload path resolved to: $uploadPath")
-
-            try {
-                if (!Files.exists(uploadPath)) {
-                    logger.info("Upload directory does not exist, creating...")
-                    Files.createDirectories(uploadPath)
-                    logger.info("Upload directory created successfully at: $uploadPath")
-                } else {
-                    logger.info("Upload directory already exists at: $uploadPath")
-                }
-            } catch (e: java.nio.file.AccessDeniedException) {
-                logger.error("Access denied when creating upload directory: $uploadPath", e)
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
-                    "error" to "Permission denied",
-                    "details" to "Cannot create or access upload directory. Check file system permissions.",
-                    "path" to uploadPath.toString(),
-                    "exception" to e.javaClass.simpleName
-                ))
-            } catch (e: java.io.IOException) {
-                logger.error("IO error when creating upload directory: $uploadPath", e)
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
-                    "error" to "Failed to create upload directory",
-                    "details" to "IO error: ${e.message}",
-                    "path" to uploadPath.toString(),
-                    "exception" to e.javaClass.simpleName
-                ))
-            }
-
-            // Generate unique filename
-            val originalFilename = file.originalFilename ?: "unknown"
-            val extension = originalFilename.substringAfterLast(".", "jpg")
-            val uniqueFilename = "${UUID.randomUUID()}.$extension"
-            val filePath = uploadPath.resolve(uniqueFilename)
-
-            logger.info("Saving file to: $filePath")
-
-            // Save file
-            try {
-                file.inputStream.use { inputStream ->
-                    Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING)
-                }
-                logger.info("File saved successfully to: $filePath")
-            } catch (e: java.nio.file.AccessDeniedException) {
-                logger.error("Access denied when saving file: $filePath", e)
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
-                    "error" to "Permission denied",
-                    "details" to "Cannot write file to upload directory. Check file system permissions.",
-                    "path" to filePath.toString(),
-                    "exception" to e.javaClass.simpleName
-                ))
-            } catch (e: java.io.IOException) {
-                logger.error("IO error when saving file: $filePath", e)
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
-                    "error" to "Failed to save file",
-                    "details" to "IO error while writing file: ${e.message}",
-                    "path" to filePath.toString(),
-                    "exception" to e.javaClass.simpleName
-                ))
-            }
-
-            // Return URL
-            val fileUrl = "/api/upload/images/$uniqueFilename"
-            logger.info("Upload successful. Returning file URL: $fileUrl")
+            logger.info("Profile image upload successful. Returning file URL: $fileUrl")
             return ResponseEntity.ok(mapOf("url" to fileUrl))
 
-        } catch (e: IllegalStateException) {
-            logger.error("Illegal state during upload", e)
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
-                "error" to "Upload service not properly initialized",
-                "details" to (e.message ?: "Unknown state error"),
-                "exception" to e.javaClass.simpleName,
-                "stackTrace" to e.stackTrace.take(5).joinToString("\n") { "  at $it" }
+        } catch (e: FileUploadException) {
+            logger.warn("Profile image upload failed: ${e.error} - ${e.details}")
+            return ResponseEntity.badRequest().body(mapOf(
+                "error" to e.error,
+                "details" to e.details
             ))
         } catch (e: Exception) {
             logger.error("=".repeat(80))
-            logger.error("UNEXPECTED ERROR DURING FILE UPLOAD", e)
+            logger.error("UNEXPECTED ERROR DURING PROFILE IMAGE UPLOAD", e)
             logger.error("Exception type: ${e.javaClass.name}")
             logger.error("Exception message: ${e.message}")
             logger.error("Stack trace:", e)
@@ -166,13 +68,99 @@ class FileUploadController(
             ))
         } finally {
             logger.info("=".repeat(80))
-            logger.info("FILE UPLOAD REQUEST ENDED")
+            logger.info("PROFILE IMAGE UPLOAD REQUEST ENDED")
+            logger.info("=".repeat(80))
+        }
+    }
+
+    @PostMapping("/introduction-video", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @Operation(summary = "Upload an introduction video")
+    fun uploadIntroductionVideo(@RequestParam("file") file: MultipartFile): ResponseEntity<Map<String, String>> {
+        logger.info("=".repeat(80))
+        logger.info("INTRODUCTION VIDEO UPLOAD REQUEST STARTED")
+        logger.info("=".repeat(80))
+        try {
+            val userId = SecurityUtils.getCurrentUserId()
+            logger.info("Introduction video upload request received for user: $userId - filename: ${file.originalFilename}, size: ${file.size}, contentType: ${file.contentType}")
+
+            val fileUrl = uploadIntroductionVideoUseCase.execute(userId, file)
+
+            logger.info("Introduction video upload successful. Returning file URL: $fileUrl")
+            return ResponseEntity.ok(mapOf("url" to fileUrl))
+
+        } catch (e: FileUploadException) {
+            logger.warn("Introduction video upload failed: ${e.error} - ${e.details}")
+            return ResponseEntity.badRequest().body(mapOf(
+                "error" to e.error,
+                "details" to e.details
+            ))
+        } catch (e: Exception) {
+            logger.error("Error uploading introduction video", e)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
+                "error" to "Unexpected error during video upload",
+                "details" to (e.message ?: "No error message available")
+            ))
+        } finally {
+            logger.info("=".repeat(80))
+            logger.info("INTRODUCTION VIDEO UPLOAD REQUEST ENDED")
+            logger.info("=".repeat(80))
+        }
+    }
+
+    @PostMapping("/portfolio-media", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @Operation(summary = "Upload portfolio media (image, video, or audio)")
+    fun uploadPortfolioMedia(
+        @RequestParam("file") file: MultipartFile,
+        @RequestParam(required = false, defaultValue = "PORTFOLIO_ITEM") contentType: ContentType,
+        @RequestParam(required = false) title: String?,
+        @RequestParam(required = false) description: String?
+    ): ResponseEntity<Any> {
+        logger.info("=".repeat(80))
+        logger.info("PORTFOLIO MEDIA UPLOAD REQUEST STARTED")
+        logger.info("=".repeat(80))
+        try {
+            val userId = SecurityUtils.getCurrentUserId()
+            logger.info("Portfolio media upload request received for user: $userId - filename: ${file.originalFilename}, size: ${file.size}, contentType: ${file.contentType}")
+
+            val mediaAsset = uploadPortfolioMediaUseCase.execute(userId, file, contentType, title, description)
+
+            logger.info("Portfolio media upload successful. Media asset ID: ${mediaAsset.mediaAssetId}")
+            return ResponseEntity.ok(mediaAsset)
+
+        } catch (e: FileUploadException) {
+            logger.warn("Portfolio media upload failed: ${e.error} - ${e.details}")
+            return ResponseEntity.badRequest().body(mapOf(
+                "error" to e.error,
+                "details" to e.details
+            ))
+        } catch (e: Exception) {
+            logger.error("Error uploading portfolio media", e)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
+                "error" to "Unexpected error during portfolio media upload",
+                "details" to (e.message ?: "No error message available")
+            ))
+        } finally {
+            logger.info("=".repeat(80))
+            logger.info("PORTFOLIO MEDIA UPLOAD REQUEST ENDED")
             logger.info("=".repeat(80))
         }
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(Exception::class)
-    fun handleException(e: Exception): ResponseEntity<Map<String, String>> {
+    fun handleException(e: Exception): ResponseEntity<Map<String, String>>? {
+        // Ignore client disconnection errors (broken pipe, connection reset, etc.)
+        // These are harmless and occur when the browser cancels/closes the connection
+        val message = e.message ?: ""
+        val exceptionName = e.javaClass.simpleName
+
+        if (exceptionName.contains("ClientAbort") ||
+            exceptionName.contains("AsyncRequestNotUsable") ||
+            message.contains("Broken pipe") ||
+            message.contains("Connection reset")) {
+            logger.debug("Client disconnected during file transfer (this is normal): $exceptionName")
+            return null // Don't send response, client already disconnected
+        }
+
         logger.error("=".repeat(80))
         logger.error("CONTROLLER EXCEPTION HANDLER TRIGGERED", e)
         logger.error("Exception type: ${e.javaClass.name}")
@@ -187,24 +175,53 @@ class FileUploadController(
     }
 
     @GetMapping("/images/{filename}")
-    @Operation(summary = "Serve uploaded image")
+    @Operation(summary = "Serve uploaded image (for profile images)")
     fun serveImage(@PathVariable filename: String): ResponseEntity<ByteArray> {
+        return serveFile(filename, "images", "application/octet-stream")
+    }
+
+    @GetMapping("/videos/{filename}")
+    @Operation(summary = "Serve uploaded video (for introduction videos)")
+    fun serveVideo(@PathVariable filename: String): ResponseEntity<ByteArray> {
+        return serveFile(filename, "videos", "video/mp4")
+    }
+
+    @GetMapping("/portfolio/images/{filename}")
+    @Operation(summary = "Serve portfolio image")
+    fun servePortfolioImage(@PathVariable filename: String): ResponseEntity<ByteArray> {
+        return serveFile(filename, "portfolio/images", "application/octet-stream")
+    }
+
+    @GetMapping("/portfolio/videos/{filename}")
+    @Operation(summary = "Serve portfolio video")
+    fun servePortfolioVideo(@PathVariable filename: String): ResponseEntity<ByteArray> {
+        return serveFile(filename, "portfolio/videos", "video/mp4")
+    }
+
+    @GetMapping("/portfolio/audio/{filename}")
+    @Operation(summary = "Serve portfolio audio")
+    fun servePortfolioAudio(@PathVariable filename: String): ResponseEntity<ByteArray> {
+        return serveFile(filename, "portfolio/audio", "audio/mpeg")
+    }
+
+    private fun serveFile(filename: String, subdirectory: String, defaultContentType: String): ResponseEntity<ByteArray> {
         try {
-            val filePath = Paths.get(uploadDir).resolve(filename)
+            val filePath = Paths.get(uploadDir, subdirectory).resolve(filename)
 
             if (!Files.exists(filePath)) {
+                logger.warn("File not found: $filePath")
                 return ResponseEntity.notFound().build()
             }
 
             val bytes = Files.readAllBytes(filePath)
-            val contentType = Files.probeContentType(filePath) ?: "application/octet-stream"
+            val contentType = Files.probeContentType(filePath) ?: defaultContentType
 
             return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .body(bytes)
 
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error("Error serving file: $filename from $subdirectory", e)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
         }
     }

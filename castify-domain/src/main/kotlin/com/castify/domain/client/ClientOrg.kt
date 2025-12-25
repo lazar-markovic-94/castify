@@ -43,17 +43,11 @@ data class ClientOrg(
 
     fun updateLogoUrl(newLogoUrl: String?): ClientOrg =
         copy(logoUrl = newLogoUrl, updatedAt = Instant.now())
-
-    fun isProductionCompany(): Boolean = orgType == OrgType.PRODUCTION_COMPANY
-
-    fun isAgency(): Boolean = orgType == OrgType.AGENCY
-
-    fun isBrand(): Boolean = orgType == OrgType.BRAND
 }
 
 enum class OrgType {
+    INDIVIDUAL,
     PRODUCTION_COMPANY,
     AGENCY,
-    BRAND,
-    INDIVIDUAL
+    BRAND
 }

@@ -18,7 +18,31 @@ class CollaborationRepositoryAdapter(
 ) : CollaborationRepository {
 
     override fun save(collaboration: Collaboration): Collaboration {
-        val entity = CollaborationEntity.fromDomain(collaboration)
+        // Find existing entity to preserve version for optimistic locking
+        val entity = jpaRepository.findById(collaboration.collaborationId)
+            .map { existing ->
+                // Update existing entity to preserve version
+                existing.apply {
+                    clientUserId = collaboration.clientUserId
+                    talentProfileId = collaboration.talentProfileId
+                    title = collaboration.title
+                    description = collaboration.description
+                    budget = collaboration.budget
+                    startDate = collaboration.startDate
+                    endDate = collaboration.endDate
+                    status = collaboration.status
+                    proposedAt = collaboration.proposedAt
+                    respondedAt = collaboration.respondedAt
+                    completedAt = collaboration.completedAt
+                    notes = collaboration.notes
+                    updatedAt = collaboration.updatedAt
+                }
+            }
+            .orElseGet {
+                // Create new entity for new collaborations
+                CollaborationEntity.fromDomain(collaboration)
+            }
+
         val saved = jpaRepository.save(entity)
         return saved.toDomain()
     }
@@ -55,18 +79,10 @@ class CollaborationRepositoryAdapter(
             .map { it.toDomain() }
     }
 
-    override fun existsByClientAndTalent(clientUserId: UUID, talentProfileId: UUID): Boolean {
-        return jpaRepository.existsByClientUserIdAndTalentProfileId(clientUserId, talentProfileId)
-    }
-
     override fun countByTalentProfileIdAndStatus(
         talentProfileId: UUID,
         status: CollaborationStatus
     ): Int {
         return jpaRepository.countByTalentProfileIdAndStatus(talentProfileId, status)
-    }
-
-    override fun delete(collaborationId: UUID) {
-        jpaRepository.deleteById(collaborationId)
     }
 }

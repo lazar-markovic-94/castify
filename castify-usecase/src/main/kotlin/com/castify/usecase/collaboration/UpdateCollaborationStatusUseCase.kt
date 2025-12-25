@@ -3,6 +3,7 @@ package com.castify.usecase.collaboration
 import com.castify.domain.collaboration.CollaborationRepository
 import com.castify.domain.exception.ResourceNotFoundException
 import com.castify.usecase.dto.CollaborationResponse
+import com.castify.usecase.rating.TalentStatisticsService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -15,7 +16,8 @@ import java.util.*
 @Service
 @Transactional
 class UpdateCollaborationStatusUseCase(
-    private val collaborationRepository: CollaborationRepository
+    private val collaborationRepository: CollaborationRepository,
+    private val statisticsService: TalentStatisticsService
 ) {
     private val logger = LoggerFactory.getLogger(UpdateCollaborationStatusUseCase::class.java)
 
@@ -68,6 +70,9 @@ class UpdateCollaborationStatusUseCase(
             val completed = collaboration.complete()
             val savedCollaboration = collaborationRepository.save(completed)
 
+            // Update statistics in application layer (replaces database trigger)
+            statisticsService.recalculateCollaborationStatistics(savedCollaboration.talentProfileId)
+
             logger.info("Successfully completed collaboration: $collaborationId")
             CollaborationResponse.fromDomain(savedCollaboration)
 
@@ -99,6 +104,9 @@ class UpdateCollaborationStatusUseCase(
 
             val canceled = collaboration.cancel()
             val savedCollaboration = collaborationRepository.save(canceled)
+
+            // Update statistics in application layer (replaces database trigger)
+            statisticsService.recalculateCollaborationStatistics(savedCollaboration.talentProfileId)
 
             logger.info("Successfully canceled collaboration: $collaborationId")
             CollaborationResponse.fromDomain(savedCollaboration)

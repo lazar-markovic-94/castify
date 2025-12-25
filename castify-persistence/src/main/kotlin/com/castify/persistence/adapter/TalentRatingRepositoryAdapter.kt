@@ -74,7 +74,11 @@ class TalentRatingRepositoryAdapter(
         return jpaRepository.countByTalentProfileId(talentProfileId)
     }
 
-    override fun deleteById(ratingId: UUID) {
-        jpaRepository.deleteById(ratingId)
+    override fun findByTalentProfileIdAndIsVerified(
+        talentProfileId: UUID,
+        isVerified: Boolean
+    ): List<TalentRating> {
+        return jpaRepository.findByTalentProfileIdAndIsVerified(talentProfileId, isVerified)
+            .map { it.toDomain() }
     }
 }

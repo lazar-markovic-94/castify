@@ -22,6 +22,7 @@ class TalentController(
     private val updateTalentTagsUseCase: UpdateTalentTagsUseCase,
     private val updateTalentCapabilitiesUseCase: UpdateTalentCapabilitiesUseCase,
     private val updateTalentIntroductionVideoUseCase: UpdateTalentIntroductionVideoUseCase,
+    private val removeTalentIntroductionVideoUseCase: RemoveTalentIntroductionVideoUseCase,
     private val searchTalentsUseCase: SearchTalentsUseCase
 ) {
 
@@ -116,6 +117,13 @@ class TalentController(
     fun updateIntroductionVideo(@Valid @RequestBody request: UpdateIntroductionVideoRequest): TalentProfileResponse {
         val userId = SecurityUtils.getCurrentUserId()
         return updateTalentIntroductionVideoUseCase.execute(userId, request)
+    }
+
+    @DeleteMapping("/introduction-video")
+    @Operation(summary = "Remove talent introduction video")
+    fun removeIntroductionVideo(): TalentProfileResponse {
+        val userId = SecurityUtils.getCurrentUserId()
+        return removeTalentIntroductionVideoUseCase.execute(userId)
     }
 
     @PostMapping("/search")

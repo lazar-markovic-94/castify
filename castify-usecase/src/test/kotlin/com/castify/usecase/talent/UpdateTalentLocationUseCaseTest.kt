@@ -19,12 +19,14 @@ import java.util.*
 class UpdateTalentLocationUseCaseTest {
 
     private lateinit var talentRepository: TalentRepository
+    private lateinit var asyncStatisticsUpdateService: com.castify.usecase.upload.AsyncStatisticsUpdateService
     private lateinit var updateTalentLocationUseCase: UpdateTalentLocationUseCase
 
     @BeforeEach
     fun setUp() {
         talentRepository = mockk()
-        updateTalentLocationUseCase = UpdateTalentLocationUseCase(talentRepository)
+        asyncStatisticsUpdateService = mockk(relaxed = true)
+        updateTalentLocationUseCase = UpdateTalentLocationUseCase(talentRepository, asyncStatisticsUpdateService)
     }
 
     @Test

@@ -23,16 +23,6 @@ data class MediaAsset(
             require(durationSeconds > 0) { "Duration must be positive" }
         }
     }
-
-    fun updateTitle(newTitle: String?): MediaAsset = copy(title = newTitle)
-
-    fun updateDescription(newDescription: String?): MediaAsset = copy(description = newDescription)
-
-    fun isVideo(): Boolean = mediaType == MediaType.VIDEO
-
-    fun isImage(): Boolean = mediaType == MediaType.IMAGE
-
-    fun isAudio(): Boolean = mediaType == MediaType.AUDIO
 }
 
 enum class MediaType {
@@ -58,10 +48,5 @@ data class PortfolioItem(
 ) {
     init {
         require(displayOrder >= 0) { "Display order must be non-negative" }
-    }
-
-    fun updateDisplayOrder(newOrder: Int): PortfolioItem {
-        require(newOrder >= 0) { "Display order must be non-negative" }
-        return copy(displayOrder = newOrder)
     }
 }

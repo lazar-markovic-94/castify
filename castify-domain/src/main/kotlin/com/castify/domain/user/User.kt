@@ -19,15 +19,15 @@ data class User(
         }
     }
 
-    fun deactivate(): User = copy(isActive = false, updatedAt = Instant.now())
-
-    fun activate(): User = copy(isActive = true, updatedAt = Instant.now())
-
-    fun updatePhone(newPhone: String?): User = copy(phone = newPhone, updatedAt = Instant.now())
-
     fun isTalent(): Boolean = role == UserRole.TALENT
 
     fun isClient(): Boolean = role == UserRole.CLIENT
 
     fun isAdmin(): Boolean = role == UserRole.ADMIN
+
+    fun deactivate(): User = copy(isActive = false, updatedAt = Instant.now())
+
+    fun activate(): User = copy(isActive = true, updatedAt = Instant.now())
+
+    fun updatePhone(newPhone: String?): User = copy(phone = newPhone, updatedAt = Instant.now())
 }

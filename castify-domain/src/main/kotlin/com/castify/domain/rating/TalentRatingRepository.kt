@@ -60,8 +60,11 @@ interface TalentRatingRepository {
     fun countByTalentProfileId(talentProfileId: UUID): Long
 
     /**
-     * Delete a rating by ID
-     * Note: Should be rarely used, as ratings are typically immutable
+     * Find all ratings for a talent profile with a specific verification status
+     * Used for recalculating statistics based on verified ratings only
      */
-    fun deleteById(ratingId: UUID)
+    fun findByTalentProfileIdAndIsVerified(
+        talentProfileId: UUID,
+        isVerified: Boolean
+    ): List<TalentRating>
 }

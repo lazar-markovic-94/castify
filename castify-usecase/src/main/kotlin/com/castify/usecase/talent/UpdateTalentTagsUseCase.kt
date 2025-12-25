@@ -15,7 +15,8 @@ import java.util.*
 @Service
 @Transactional
 class UpdateTalentTagsUseCase(
-    private val talentRepository: TalentRepository
+    private val talentRepository: TalentRepository,
+    private val asyncStatisticsUpdateService: com.castify.usecase.upload.AsyncStatisticsUpdateService
 ) {
     private val logger = LoggerFactory.getLogger(UpdateTalentTagsUseCase::class.java)
 
@@ -31,6 +32,10 @@ class UpdateTalentTagsUseCase(
 
             val savedProfile = talentRepository.save(updatedProfile)
             logger.info("Successfully updated tags for talent: ${savedProfile.talentProfileId}")
+
+            // Update profile completeness statistics in a separate transaction
+            // This is called on a separate service to ensure proper Spring AOP proxy interception
+            asyncStatisticsUpdateService.updateProfileCompleteness(savedProfile.talentProfileId)
 
             TalentProfileResponse.fromDomain(savedProfile)
 
