@@ -27,6 +27,8 @@ class CollaborationRepositoryAdapter(
                     talentProfileId = collaboration.talentProfileId
                     title = collaboration.title
                     description = collaboration.description
+                    servicesRequired = collaboration.servicesRequired
+                    deadline = collaboration.deadline
                     budget = collaboration.budget
                     startDate = collaboration.startDate
                     endDate = collaboration.endDate

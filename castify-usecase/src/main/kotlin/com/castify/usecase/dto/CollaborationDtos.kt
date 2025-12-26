@@ -2,6 +2,7 @@ package com.castify.usecase.dto
 
 import com.castify.domain.collaboration.Collaboration
 import com.castify.domain.collaboration.CollaborationStatus
+import com.castify.domain.collaboration.ServiceType
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.*
@@ -15,6 +16,8 @@ data class CreateCollaborationRequestDto(
     val talentProfileId: UUID,
     val title: String,
     val description: String,
+    val servicesRequired: List<ServiceType>,
+    val deadline: Instant?,
     val budget: BigDecimal?,
     val startDate: Instant?,
     val endDate: Instant?,
@@ -32,6 +35,8 @@ data class CollaborationResponse(
     val talentProfileId: UUID,
     val title: String,
     val description: String,
+    val servicesRequired: List<ServiceType>,
+    val deadline: Instant?,
     val budget: BigDecimal?,
     val startDate: Instant?,
     val endDate: Instant?,
@@ -51,6 +56,8 @@ data class CollaborationResponse(
                 talentProfileId = collaboration.talentProfileId,
                 title = collaboration.title,
                 description = collaboration.description,
+                servicesRequired = collaboration.servicesRequired,
+                deadline = collaboration.deadline,
                 budget = collaboration.budget,
                 startDate = collaboration.startDate,
                 endDate = collaboration.endDate,

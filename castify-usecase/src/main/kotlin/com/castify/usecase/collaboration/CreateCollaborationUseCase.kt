@@ -53,6 +53,8 @@ class CreateCollaborationUseCase(
                 talentProfileId = request.talentProfileId,
                 title = request.title,
                 description = request.description,
+                servicesRequired = request.servicesRequired,
+                deadline = request.deadline,
                 budget = request.budget,
                 startDate = request.startDate,
                 endDate = request.endDate,

@@ -2,6 +2,8 @@ package com.castify.persistence.entity
 
 import com.castify.domain.collaboration.Collaboration
 import com.castify.domain.collaboration.CollaborationStatus
+import com.castify.domain.collaboration.ServiceType
+import com.castify.persistence.converter.ServiceTypeArrayConverter
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.time.Instant
@@ -25,6 +27,13 @@ class CollaborationEntity(
 
     @Column(name = "description", columnDefinition = "TEXT", nullable = false)
     var description: String,
+
+    @Column(name = "services_required", columnDefinition = "TEXT[]", nullable = false)
+    @Convert(converter = ServiceTypeArrayConverter::class)
+    var servicesRequired: List<ServiceType>,
+
+    @Column(name = "deadline")
+    var deadline: Instant? = null,
 
     @Column(name = "budget", precision = 10, scale = 2)
     var budget: BigDecimal? = null,
@@ -94,6 +103,8 @@ class CollaborationEntity(
             talentProfileId = talentProfileId,
             title = title,
             description = description,
+            servicesRequired = servicesRequired,
+            deadline = deadline,
             budget = budget,
             startDate = startDate,
             endDate = endDate,
@@ -118,6 +129,8 @@ class CollaborationEntity(
                 talentProfileId = collaboration.talentProfileId,
                 title = collaboration.title,
                 description = collaboration.description,
+                servicesRequired = collaboration.servicesRequired,
+                deadline = collaboration.deadline,
                 budget = collaboration.budget,
                 startDate = collaboration.startDate,
                 endDate = collaboration.endDate,

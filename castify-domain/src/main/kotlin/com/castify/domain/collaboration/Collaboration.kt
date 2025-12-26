@@ -13,6 +13,8 @@ data class Collaboration(
     val talentProfileId: UUID,
     val title: String,
     val description: String,
+    val servicesRequired: List<ServiceType>,
+    val deadline: Instant?,
     val budget: BigDecimal?,
     val startDate: Instant?,
     val endDate: Instant?,
@@ -30,11 +32,14 @@ data class Collaboration(
             talentProfileId: UUID,
             title: String,
             description: String,
+            servicesRequired: List<ServiceType>,
+            deadline: Instant?,
             budget: BigDecimal?,
             startDate: Instant?,
             endDate: Instant?,
             notes: String?
         ): Collaboration {
+            require(servicesRequired.isNotEmpty()) { "At least one service type must be selected" }
             val now = Instant.now()
             return Collaboration(
                 collaborationId = UUID.randomUUID(),
@@ -42,6 +47,8 @@ data class Collaboration(
                 talentProfileId = talentProfileId,
                 title = title,
                 description = description,
+                servicesRequired = servicesRequired,
+                deadline = deadline,
                 budget = budget,
                 startDate = startDate,
                 endDate = endDate,
