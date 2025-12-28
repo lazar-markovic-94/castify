@@ -1,0 +1,99 @@
+# =============================================================================
+# Backend Deployment - Deploy to Hetzner Server on develop branch
+# Triggers when code is pushed to develop branch
+# =============================================================================
+
+name: Deploy Backend to Develop
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - '**'
+      - '.github/workflows/deploy-develop.yml'
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy to Hetzner
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Java 21
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Build the application
+      - name: Build with Maven
+        run: ./mvnw clean package -DskipTests -B
+
+      # Find the built JAR file
+      - name: Get JAR file name
+        id: jar
+        run: |
+          JAR_FILE=$(ls castify-app/target/castify-*.jar | head -1)
+          echo "jar_file=$JAR_FILE" >> $GITHUB_OUTPUT
+          echo "Built JAR: $JAR_FILE"
+
+      # Deploy to Hetzner server
+      - name: Deploy to Hetzner
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.HETZNER_SSH_KEY }}
+          SERVER_IP: ${{ secrets.HETZNER_SERVER_IP }}
+          SERVER_USER: root
+        run: |
+          # Set up SSH key
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Add server to known hosts
+          ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+
+          # Copy JAR to server
+          scp -i ~/.ssh/deploy_key ${{ steps.jar.outputs.jar_file }} $SERVER_USER@$SERVER_IP:/opt/castify/castify.jar
+
+          # Restart the service
+          ssh -i ~/.ssh/deploy_key $SERVER_USER@$SERVER_IP << 'EOF'
+            systemctl restart castify
+            sleep 5
+            systemctl status castify --no-pager
+          EOF
+
+          echo "✅ Deployment completed!"
+
+      # Verify deployment
+      - name: Check service health
+        env:
+          SERVER_IP: ${{ secrets.HETZNER_SERVER_IP }}
+          SSH_PRIVATE_KEY: ${{ secrets.HETZNER_SSH_KEY }}
+        run: |
+          ssh -i ~/.ssh/deploy_key root@$SERVER_IP << 'EOF'
+            # Wait for service to be ready
+            sleep 10
+
+            # Check if service is running
+            if systemctl is-active --quiet castify; then
+              echo "✅ Service is running"
+
+              # Try to hit health endpoint
+              RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health || echo "000")
+              if [ "$RESPONSE" = "200" ]; then
+                echo "✅ Health check passed"
+              else
+                echo "⚠️  Health check returned: $RESPONSE"
+              fi
+            else
+              echo "❌ Service failed to start"
+              journalctl -u castify -n 50
+              exit 1
+            fi
+          EOF
