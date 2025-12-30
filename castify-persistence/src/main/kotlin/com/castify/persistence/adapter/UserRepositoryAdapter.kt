@@ -39,6 +39,15 @@ class UserRepositoryAdapter(
         return userJpaRepository.existsByEmail(email)
     }
 
+    override fun updatePassword(userId: UUID, newPassword: String): Boolean {
+        val entity = userJpaRepository.findById(userId).orElse(null) ?: return false
+        val hashedPassword = passwordEncoder.encode(newPassword) ?: return false
+        entity.passwordHash = hashedPassword
+        userJpaRepository.save(entity)
+        passwordStore[userId] = hashedPassword
+        return true
+    }
+
     // Extension method to save user with password
     fun saveWithPassword(user: User, rawPassword: String): User {
         val hashedPassword = passwordEncoder.encode(rawPassword)!!

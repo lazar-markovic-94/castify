@@ -1,12 +1,11 @@
 package com.castify.web.controller
 
+import com.castify.usecase.auth.ConfirmPasswordResetUseCase
 import com.castify.usecase.auth.GetCurrentUserUseCase
 import com.castify.usecase.auth.LoginUserUseCase
 import com.castify.usecase.auth.RegisterUserUseCase
-import com.castify.usecase.dto.AuthResponse
-import com.castify.usecase.dto.LoginRequest
-import com.castify.usecase.dto.RegisterRequest
-import com.castify.usecase.dto.UserInfoResponse
+import com.castify.usecase.auth.RequestPasswordResetUseCase
+import com.castify.usecase.dto.*
 import com.castify.web.security.SecurityUtils
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -20,7 +19,9 @@ import org.springframework.web.bind.annotation.*
 class AuthController(
     private val registerUserUseCase: RegisterUserUseCase,
     private val loginUserUseCase: LoginUserUseCase,
-    private val getCurrentUserUseCase: GetCurrentUserUseCase
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val requestPasswordResetUseCase: RequestPasswordResetUseCase,
+    private val confirmPasswordResetUseCase: ConfirmPasswordResetUseCase
 ) {
 
     @PostMapping("/register")
@@ -41,5 +42,17 @@ class AuthController(
     fun getCurrentUser(): UserInfoResponse {
         val userId = SecurityUtils.getCurrentUserId()
         return getCurrentUserUseCase.execute(userId)
+    }
+
+    @PostMapping("/password-reset/request")
+    @Operation(summary = "Request password reset", description = "Send a password reset email to the user")
+    fun requestPasswordReset(@Valid @RequestBody request: PasswordResetRequest): PasswordResetResponse {
+        return requestPasswordResetUseCase.execute(request)
+    }
+
+    @PostMapping("/password-reset/confirm")
+    @Operation(summary = "Confirm password reset", description = "Reset the password using the token from email")
+    fun confirmPasswordReset(@Valid @RequestBody request: PasswordResetConfirm): PasswordResetResponse {
+        return confirmPasswordResetUseCase.execute(request)
     }
 }

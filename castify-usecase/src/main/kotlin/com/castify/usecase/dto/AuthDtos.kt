@@ -42,3 +42,23 @@ data class UserInfoResponse(
     val phone: String?,
     val isActive: Boolean
 )
+
+data class PasswordResetRequest(
+    @field:Email(message = "Invalid email format")
+    @field:NotBlank(message = "Email is required")
+    val email: String?
+)
+
+data class PasswordResetConfirm(
+    @field:NotBlank(message = "Token is required")
+    val token: String?,
+
+    @field:NotBlank(message = "New password is required")
+    @field:Size(min = 8, message = "Password must be at least 8 characters")
+    val newPassword: String?
+)
+
+data class PasswordResetResponse(
+    val message: String,
+    val success: Boolean
+)
