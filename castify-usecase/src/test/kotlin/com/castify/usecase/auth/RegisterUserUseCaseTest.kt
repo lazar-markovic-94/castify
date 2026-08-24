@@ -52,7 +52,7 @@ class RegisterUserUseCaseTest {
 
         every { userRepository.existsByEmail(email) } returns false
         every { passwordEncoder.encode(password) } returns hashedPassword
-        every { userRepository.save(any()) } answers { firstArg() }
+        every { userRepository.create(any(), any()) } answers { firstArg() }
         every { tokenService.generateToken(any(), email, role.name) } returns expectedToken
 
         // When
@@ -67,7 +67,7 @@ class RegisterUserUseCaseTest {
 
         verify(exactly = 1) { userRepository.existsByEmail(email) }
         verify(exactly = 1) { passwordEncoder.encode(password) }
-        verify(exactly = 1) { userRepository.save(any()) }
+        verify(exactly = 1) { userRepository.create(any(), hashedPassword) }
         verify(exactly = 1) { tokenService.generateToken(any(), email, role.name) }
     }
 
@@ -90,7 +90,7 @@ class RegisterUserUseCaseTest {
 
         every { userRepository.existsByEmail(email) } returns false
         every { passwordEncoder.encode(password) } returns hashedPassword
-        every { userRepository.save(any()) } answers { firstArg() }
+        every { userRepository.create(any(), any()) } answers { firstArg() }
         every { tokenService.generateToken(any(), email, role.name) } returns expectedToken
 
         // When
@@ -200,7 +200,7 @@ class RegisterUserUseCaseTest {
 
         every { userRepository.existsByEmail(email) } returns false
         every { passwordEncoder.encode(password) } returns hashedPassword
-        every { userRepository.save(any()) } answers { firstArg() }
+        every { userRepository.create(any(), any()) } answers { firstArg() }
         every { tokenService.generateToken(any(), email, role.name) } returns expectedToken
 
         // When

@@ -38,8 +38,16 @@ class LoginUserUseCase(
             val user = userRepository.findByEmail(email)
                 ?: throw UnauthorizedException("Invalid email or password")
 
-            // Note: Password checking is done in persistence layer adapter
-            // since domain User doesn't contain password
+            // This check did not exist: the use case looked the user up by
+            // email and issued a token without ever comparing the password,
+            // so any password authenticated any registered account.
+            val passwordHash = userRepository.findPasswordHashByEmail(email)
+            if (passwordHash == null || !passwordEncoder.matches(password, passwordHash)) {
+                logger.warn("Invalid password supplied for: $email")
+                // Same message and status as an unknown email, so responses
+                // cannot be used to enumerate registered accounts.
+                throw UnauthorizedException("Invalid email or password")
+            }
 
             if (!user.isActive) {
                 logger.warn("Login attempted for inactive account: $email")

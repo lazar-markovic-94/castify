@@ -6,30 +6,31 @@ import com.castify.persistence.entity.UserEntity
 import com.castify.persistence.jpa.UserJpaRepository
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.Instant
 import java.util.*
 
 class UserRepositoryAdapterTest {
 
     private lateinit var userJpaRepository: UserJpaRepository
-    private lateinit var passwordEncoder: PasswordEncoder
     private lateinit var userRepositoryAdapter: UserRepositoryAdapter
 
     @BeforeEach
     fun setUp() {
         userJpaRepository = mockk()
-        passwordEncoder = mockk()
-        userRepositoryAdapter = UserRepositoryAdapter(userJpaRepository, passwordEncoder)
+        userRepositoryAdapter = UserRepositoryAdapter(userJpaRepository)
     }
 
     @Test
-    fun `should successfully save new user`() {
-        // Given
+    fun `should successfully create a new user`() {
+        // Was `should successfully save new user`, and it stubbed
+        // passwordEncoder.encode("temporary") - asserting the very behaviour
+        // that discarded every user's real password. Registration now goes
+        // through create() with a caller-supplied hash.
         val userId = UUID.randomUUID()
         val email = "test@example.com"
         val hashedPassword = "hashedPassword123"
@@ -44,28 +45,16 @@ class UserRepositoryAdapterTest {
             updatedAt = Instant.now()
         )
 
-        val entity = UserEntity(
-            userId = userId,
-            email = email,
-            role = UserRole.TALENT,
-            passwordHash = hashedPassword,
-            phone = "+1234567890",
-            isActive = true,
-            createdAt = user.createdAt,
-            updatedAt = user.updatedAt
-        )
+        val entitySlot = slot<UserEntity>()
+        every { userJpaRepository.save(capture(entitySlot)) } answers { entitySlot.captured }
 
-        every { passwordEncoder.encode("temporary") } returns hashedPassword
-        every { userJpaRepository.save(any()) } returns entity
+        val result = userRepositoryAdapter.create(user, hashedPassword)
 
-        // When
-        val result = userRepositoryAdapter.save(user)
-
-        // Then
         assertNotNull(result)
         assertEquals(userId, result.userId)
         assertEquals(email, result.email)
         assertEquals(UserRole.TALENT, result.role)
+        assertEquals(hashedPassword, entitySlot.captured.passwordHash)
 
         verify(exactly = 1) { userJpaRepository.save(any()) }
     }
@@ -192,11 +181,9 @@ class UserRepositoryAdapterTest {
     }
 
     @Test
-    fun `should successfully save user with password`() {
-        // Given
+    fun `create stores the supplied password hash`() {
         val userId = UUID.randomUUID()
         val email = "withpassword@example.com"
-        val rawPassword = "plainPassword123"
         val hashedPassword = "hashedPassword123"
 
         val user = User(
@@ -209,44 +196,81 @@ class UserRepositoryAdapterTest {
             updatedAt = Instant.now()
         )
 
-        val entity = UserEntity(
+        val entitySlot = slot<UserEntity>()
+        every { userJpaRepository.save(capture(entitySlot)) } answers { entitySlot.captured }
+
+        val result = userRepositoryAdapter.create(user, hashedPassword)
+
+        assertEquals(userId, result.userId)
+        assertEquals(hashedPassword, entitySlot.captured.passwordHash)
+    }
+
+    @Test
+    fun `save preserves the stored password hash`() {
+        // Regression: save() used to fall back to encoding the literal string
+        // "temporary" whenever its in-memory map missed, silently replacing the
+        // user's real password on every write.
+        val userId = UUID.randomUUID()
+        val existingHash = "the-real-hash"
+
+        val user = User(
             userId = userId,
-            email = email,
+            email = "update@example.com",
             role = UserRole.TALENT,
-            passwordHash = hashedPassword,
+            phone = null,
+            isActive = true,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+
+        val existing = UserEntity(
+            userId = userId,
+            email = "update@example.com",
+            role = UserRole.TALENT,
+            passwordHash = existingHash,
             phone = null,
             isActive = true,
             createdAt = user.createdAt,
             updatedAt = user.updatedAt
         )
 
-        every { passwordEncoder.encode(rawPassword) } returns hashedPassword
-        every { userJpaRepository.save(any()) } returns entity
+        val entitySlot = slot<UserEntity>()
+        every { userJpaRepository.findById(userId) } returns Optional.of(existing)
+        every { userJpaRepository.save(capture(entitySlot)) } answers { entitySlot.captured }
 
-        // When
-        val result = userRepositoryAdapter.saveWithPassword(user, rawPassword)
+        userRepositoryAdapter.save(user)
 
-        // Then
-        assertNotNull(result)
-        assertEquals(userId, result.userId)
-        assertEquals(email, result.email)
-
-        verify(exactly = 1) { passwordEncoder.encode(rawPassword) }
-        verify(exactly = 1) { userJpaRepository.save(any()) }
+        assertEquals(existingHash, entitySlot.captured.passwordHash)
     }
 
     @Test
-    fun `should successfully verify correct password`() {
-        // Given
-        val email = "verify@example.com"
-        val rawPassword = "correctPassword"
-        val hashedPassword = "hashedCorrectPassword"
+    fun `save refuses to create an unknown user`() {
+        val user = User(
+            userId = UUID.randomUUID(),
+            email = "ghost@example.com",
+            role = UserRole.TALENT,
+            phone = null,
+            isActive = true,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
 
+        every { userJpaRepository.findById(user.userId) } returns Optional.empty()
+
+        assertThrows(IllegalStateException::class.java) {
+            userRepositoryAdapter.save(user)
+        }
+        verify(exactly = 0) { userJpaRepository.save(any()) }
+    }
+
+    @Test
+    fun `findPasswordHashByEmail returns the stored hash`() {
+        val email = "hash@example.com"
         val entity = UserEntity(
             userId = UUID.randomUUID(),
             email = email,
-            role = UserRole.TALENT,
-            passwordHash = hashedPassword,
+            role = UserRole.CLIENT,
+            passwordHash = "stored-hash",
             phone = null,
             isActive = true,
             createdAt = Instant.now(),
@@ -254,60 +278,14 @@ class UserRepositoryAdapterTest {
         )
 
         every { userJpaRepository.findByEmail(email) } returns entity
-        every { passwordEncoder.matches(rawPassword, hashedPassword) } returns true
 
-        // When
-        val result = userRepositoryAdapter.verifyPassword(email, rawPassword)
-
-        // Then
-        assertTrue(result)
-        verify(exactly = 1) { userJpaRepository.findByEmail(email) }
-        verify(exactly = 1) { passwordEncoder.matches(rawPassword, hashedPassword) }
+        assertEquals("stored-hash", userRepositoryAdapter.findPasswordHashByEmail(email))
     }
 
     @Test
-    fun `should return false when verifying incorrect password`() {
-        // Given
-        val email = "verify@example.com"
-        val rawPassword = "wrongPassword"
-        val hashedPassword = "hashedCorrectPassword"
+    fun `findPasswordHashByEmail returns null for an unknown email`() {
+        every { userJpaRepository.findByEmail("nobody@example.com") } returns null
 
-        val entity = UserEntity(
-            userId = UUID.randomUUID(),
-            email = email,
-            role = UserRole.TALENT,
-            passwordHash = hashedPassword,
-            phone = null,
-            isActive = true,
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
-
-        every { userJpaRepository.findByEmail(email) } returns entity
-        every { passwordEncoder.matches(rawPassword, hashedPassword) } returns false
-
-        // When
-        val result = userRepositoryAdapter.verifyPassword(email, rawPassword)
-
-        // Then
-        assertFalse(result)
-        verify(exactly = 1) { passwordEncoder.matches(rawPassword, hashedPassword) }
-    }
-
-    @Test
-    fun `should return false when user not found for password verification`() {
-        // Given
-        val email = "nonexistent@example.com"
-        val rawPassword = "anyPassword"
-
-        every { userJpaRepository.findByEmail(email) } returns null
-
-        // When
-        val result = userRepositoryAdapter.verifyPassword(email, rawPassword)
-
-        // Then
-        assertFalse(result)
-        verify(exactly = 1) { userJpaRepository.findByEmail(email) }
-        verify(exactly = 0) { passwordEncoder.matches(any(), any()) }
+        assertNull(userRepositoryAdapter.findPasswordHashByEmail("nobody@example.com"))
     }
 }

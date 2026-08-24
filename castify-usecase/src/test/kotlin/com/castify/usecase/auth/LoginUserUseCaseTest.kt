@@ -56,6 +56,8 @@ class LoginUserUseCaseTest {
         )
 
         every { userRepository.findByEmail(email) } returns user
+        every { userRepository.findPasswordHashByEmail(email) } returns "hashed"
+        every { passwordEncoder.matches(password, "hashed") } returns true
         every { tokenService.generateToken(userId, email, UserRole.TALENT.name) } returns expectedToken
 
         // When
@@ -96,6 +98,8 @@ class LoginUserUseCaseTest {
         )
 
         every { userRepository.findByEmail(email) } returns user
+        every { userRepository.findPasswordHashByEmail(email) } returns "hashed"
+        every { passwordEncoder.matches(password, "hashed") } returns true
         every { tokenService.generateToken(userId, email, UserRole.CLIENT.name) } returns expectedToken
 
         // When
@@ -155,6 +159,8 @@ class LoginUserUseCaseTest {
         )
 
         every { userRepository.findByEmail(email) } returns inactiveUser
+        every { userRepository.findPasswordHashByEmail(email) } returns "hashed"
+        every { passwordEncoder.matches(password, "hashed") } returns true
 
         // When & Then
         val exception = assertThrows<UnauthorizedException> {
@@ -222,6 +228,8 @@ class LoginUserUseCaseTest {
         )
 
         every { userRepository.findByEmail(email) } returns adminUser
+        every { userRepository.findPasswordHashByEmail(email) } returns "hashed"
+        every { passwordEncoder.matches(password, "hashed") } returns true
         every { tokenService.generateToken(userId, email, UserRole.ADMIN.name) } returns expectedToken
 
         // When
@@ -231,5 +239,86 @@ class LoginUserUseCaseTest {
         assertNotNull(result)
         assertEquals(expectedToken, result.token)
         assertEquals(UserRole.ADMIN, result.role)
+    }
+
+    // --- Regression: the password was never verified at all. Login looked the
+    // --- user up by email and issued a JWT, so any password authenticated any
+    // --- registered account. These tests fail against that implementation.
+
+    @Test
+    fun `should reject login when password does not match the stored hash`() {
+        val email = "talent@example.com"
+        val user = User(
+            userId = UUID.randomUUID(),
+            email = email,
+            role = UserRole.TALENT,
+            phone = null,
+            isActive = true,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+
+        every { userRepository.findByEmail(email) } returns user
+        every { userRepository.findPasswordHashByEmail(email) } returns "stored-hash"
+        every { passwordEncoder.matches("wrong-password", "stored-hash") } returns false
+
+        val exception = assertThrows<UnauthorizedException> {
+            loginUserUseCase.execute(LoginRequest(email = email, password = "wrong-password"))
+        }
+
+        assertEquals("Invalid email or password", exception.message)
+        verify(exactly = 1) { passwordEncoder.matches("wrong-password", "stored-hash") }
+        verify(exactly = 0) { tokenService.generateToken(any(), any(), any()) }
+    }
+
+    @Test
+    fun `should reject login when no password hash is stored for the user`() {
+        val email = "talent@example.com"
+        val user = User(
+            userId = UUID.randomUUID(),
+            email = email,
+            role = UserRole.TALENT,
+            phone = null,
+            isActive = true,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+
+        every { userRepository.findByEmail(email) } returns user
+        every { userRepository.findPasswordHashByEmail(email) } returns null
+
+        assertThrows<UnauthorizedException> {
+            loginUserUseCase.execute(LoginRequest(email = email, password = "anything"))
+        }
+
+        verify(exactly = 0) { tokenService.generateToken(any(), any(), any()) }
+    }
+
+    @Test
+    fun `should not reveal whether an email is registered`() {
+        // Unknown email and wrong password must be indistinguishable, otherwise
+        // the endpoint can be used to enumerate accounts.
+        val user = User(
+            userId = UUID.randomUUID(),
+            email = "known@example.com",
+            role = UserRole.CLIENT,
+            phone = null,
+            isActive = true,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+        every { userRepository.findByEmail("known@example.com") } returns user
+        every { userRepository.findPasswordHashByEmail("known@example.com") } returns "hash"
+        every { passwordEncoder.matches(any(), "hash") } returns false
+        every { userRepository.findByEmail("unknown@example.com") } returns null
+
+        val wrongPassword = assertThrows<UnauthorizedException> {
+            loginUserUseCase.execute(LoginRequest("known@example.com", "nope"))
+        }
+        val unknownEmail = assertThrows<UnauthorizedException> {
+            loginUserUseCase.execute(LoginRequest("unknown@example.com", "nope"))
+        }
+
+        assertEquals(unknownEmail.message, wrongPassword.message)
     }
 }

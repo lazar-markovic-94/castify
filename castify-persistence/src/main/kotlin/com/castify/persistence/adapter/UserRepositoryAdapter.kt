@@ -4,25 +4,36 @@ import com.castify.domain.user.User
 import com.castify.domain.user.UserRepository
 import com.castify.persistence.entity.UserEntity
 import com.castify.persistence.jpa.UserJpaRepository
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
 class UserRepositoryAdapter(
-    private val userJpaRepository: UserJpaRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val userJpaRepository: UserJpaRepository
 ) : UserRepository {
 
-    // In-memory password storage for this session
-    // Note: In production, consider more robust solution
-    private val passwordStore = mutableMapOf<UUID, String>()
-
+    /**
+     * Updates an existing user, carrying the stored password hash over from the
+     * row on disk.
+     *
+     * The previous implementation looked the hash up in an in-memory map and
+     * fell back to encoding the literal string "temporary" when it missed -
+     * which it always did for a fresh process - so every registration wrote a
+     * hash of "temporary" and the user's real password was discarded.
+     */
     override fun save(user: User): User {
-        val passwordHash = passwordStore[user.userId] ?: passwordEncoder.encode("temporary")!!
+        val existing = userJpaRepository.findById(user.userId).orElse(null)
+            ?: throw IllegalStateException(
+                "Cannot save unknown user ${user.userId}; use create() to register a new one"
+            )
+
+        val entity = UserEntity.fromDomain(user, existing.passwordHash)
+        return userJpaRepository.save(entity).toDomain()
+    }
+
+    override fun create(user: User, passwordHash: String): User {
         val entity = UserEntity.fromDomain(user, passwordHash)
-        val saved = userJpaRepository.save(entity)
-        return saved.toDomain()
+        return userJpaRepository.save(entity).toDomain()
     }
 
     override fun findById(userId: UUID): User? {
@@ -39,18 +50,7 @@ class UserRepositoryAdapter(
         return userJpaRepository.existsByEmail(email)
     }
 
-    // Extension method to save user with password
-    fun saveWithPassword(user: User, rawPassword: String): User {
-        val hashedPassword = passwordEncoder.encode(rawPassword)!!
-        passwordStore[user.userId] = hashedPassword
-        val entity = UserEntity.fromDomain(user, hashedPassword)
-        val saved = userJpaRepository.save(entity)
-        return saved.toDomain()
-    }
-
-    // Extension method to verify password
-    fun verifyPassword(email: String, rawPassword: String): Boolean {
-        val entity = userJpaRepository.findByEmail(email) ?: return false
-        return passwordEncoder.matches(rawPassword, entity.passwordHash)
+    override fun findPasswordHashByEmail(email: String): String? {
+        return userJpaRepository.findByEmail(email)?.passwordHash
     }
 }

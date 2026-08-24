@@ -55,7 +55,10 @@ class RegisterUserUseCase(
             phone = request.phone
         )
 
-        val savedUser = userRepository.save(user)
+        // hashedPassword was previously computed and then dropped on the floor:
+        // save(user) took no hash, so the adapter stored a hash of the literal
+        // string "temporary" instead of the user's actual password.
+        val savedUser = userRepository.create(user, hashedPassword)
         logger.info("Successfully registered user: ${savedUser.userId}")
 
         val token = tokenService.generateToken(
