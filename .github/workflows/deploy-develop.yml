@@ -104,20 +104,17 @@ jobs:
           # Refresh the stack definition from the repo so the server never
           # drifts from what is committed here.
           scp -i ~/.ssh/deploy_key \
-            deploy/docker-compose.prod.yml deploy/Caddyfile deploy/backup.sh deploy/dc \
+            deploy/docker-compose.prod.yml deploy/Caddyfile deploy/backup.sh \
+            deploy/dc deploy/healthcheck.sh \
             "root@${SERVER_IP}:/opt/castify/"
-          $SSH "chmod 750 /opt/castify/backup.sh /opt/castify/dc"
+          $SSH "chmod 750 /opt/castify/backup.sh /opt/castify/dc /opt/castify/healthcheck.sh"
 
           # The job's GITHUB_TOKEN is enough to pull; no long-lived registry
           # credential is stored on the server.
           $SSH "echo '${REGISTRY_TOKEN}' | docker login ghcr.io -u '${REGISTRY_USER}' --password-stdin"
 
           $SSH "printf 'APP_IMAGE=%s\n' '${APP_IMAGE}' > /opt/castify/.env.image"
-          $SSH "cd /opt/castify && \
-                docker compose --env-file .env --env-file .env.image \
-                  -f docker-compose.prod.yml pull && \
-                docker compose --env-file .env --env-file .env.image \
-                  -f docker-compose.prod.yml up -d --remove-orphans"
+          $SSH "cd /opt/castify && ./dc pull && ./dc up -d --remove-orphans"
 
           $SSH "docker logout ghcr.io >/dev/null 2>&1 || true"
 
@@ -126,23 +123,9 @@ jobs:
           SERVER_IP: ${{ secrets.HETZNER_SERVER_IP }}
         run: |
           set -euo pipefail
-          SSH="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes root@${SERVER_IP}"
-
-          # Poll through Caddy, so this exercises the proxy as well as the app.
-          for i in $(seq 1 30); do
-            CODE=$($SSH "curl -s -o /dev/null -w '%{http_code}' http://localhost/actuator/health" || echo 000)
-            if [ "$CODE" = "200" ]; then
-              echo "Health check passed after ${i} attempt(s)"
-              exit 0
-            fi
-            echo "attempt ${i}: /actuator/health -> ${CODE}"
-            sleep 5
-          done
-
-          echo "::error::Service did not become healthy within 150s"
-          $SSH "cd /opt/castify && docker compose -f docker-compose.prod.yml ps && \
-                docker compose -f docker-compose.prod.yml logs --tail=100 app"
-          exit 1
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+            "root@${SERVER_IP}" "/opt/castify/healthcheck.sh" \
+            || { echo "::error::Service did not become healthy after deploy"; exit 1; }
 
       - name: Prune old images
         if: success()
