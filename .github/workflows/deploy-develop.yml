@@ -104,9 +104,9 @@ jobs:
           # Refresh the stack definition from the repo so the server never
           # drifts from what is committed here.
           scp -i ~/.ssh/deploy_key \
-            deploy/docker-compose.prod.yml deploy/Caddyfile deploy/backup.sh \
+            deploy/docker-compose.prod.yml deploy/Caddyfile deploy/backup.sh deploy/dc \
             "root@${SERVER_IP}:/opt/castify/"
-          $SSH "chmod 750 /opt/castify/backup.sh"
+          $SSH "chmod 750 /opt/castify/backup.sh /opt/castify/dc"
 
           # The job's GITHUB_TOKEN is enough to pull; no long-lived registry
           # credential is stored on the server.

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Thin wrapper around `docker compose` for this stack. Installed at
+# /opt/castify/dc.
+#
+# Compose auto-loads .env from the project directory but NOT .env.image, and it
+# interpolates the whole file before running any command - so a bare
+# `docker compose ... ps` dies with:
+#
+#     required variable APP_IMAGE is missing a value
+#
+# Every operator command should go through this wrapper instead:
+#
+#     /opt/castify/dc ps
+#     /opt/castify/dc logs -f app
+#     /opt/castify/dc exec db psql -U castify -d castify
+# =============================================================================
+set -euo pipefail
+
+STACK_DIR=/opt/castify
+
+ARGS=(--env-file "${STACK_DIR}/.env")
+# Absent until the first deploy writes it.
+[[ -f "${STACK_DIR}/.env.image" ]] && ARGS+=(--env-file "${STACK_DIR}/.env.image")
+
+exec docker compose "${ARGS[@]}" -f "${STACK_DIR}/docker-compose.prod.yml" "$@"

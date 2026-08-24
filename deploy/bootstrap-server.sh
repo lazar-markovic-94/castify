@@ -84,6 +84,8 @@ fi
 # ---------------------------------------------------------------------------
 # 4. Nightly database backup
 # ---------------------------------------------------------------------------
+[[ -f /root/dc ]] && install -m 750 /root/dc "${STACK_DIR}/dc"
+
 if [[ -f /root/backup.sh ]]; then
 	install -m 750 /root/backup.sh "${STACK_DIR}/backup.sh"
 	cat > /etc/cron.d/castify-backup <<'EOF'

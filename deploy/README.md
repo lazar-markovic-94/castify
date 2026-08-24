@@ -82,12 +82,17 @@ Then: `http://<SERVER_IP>/swagger-ui.html`
 
 ## Day-to-day
 
+Use the `dc` wrapper, never a bare `docker compose`. Compose auto-loads `.env`
+but not `.env.image`, and it interpolates the entire file before running any
+command — so `docker compose ... ps` fails with *"required variable APP_IMAGE is
+missing a value"*. The wrapper passes both env files.
+
 ```bash
-cd /opt/castify
-docker compose -f docker-compose.prod.yml ps
-docker compose -f docker-compose.prod.yml logs -f app
-docker compose -f docker-compose.prod.yml exec db psql -U castify -d castify
-./backup.sh                                    # manual dump
+/opt/castify/dc ps
+/opt/castify/dc logs -f app
+/opt/castify/dc exec db psql -U castify -d castify
+/opt/castify/dc restart app
+/opt/castify/backup.sh                         # manual dump
 ```
 
 **Rollback:** Actions → *Deploy Backend to Develop* → *Run workflow* → put a previous
@@ -98,7 +103,7 @@ that image. Tags are visible under the repo's Packages.
 
 ```bash
 gunzip -c /var/backups/castify/castify-YYYY-MM-DD_HHMM.sql.gz \
-  | docker compose -f docker-compose.prod.yml exec -T db psql -U castify -d castify
+  | /opt/castify/dc exec -T db psql -U castify -d castify
 ```
 
 ## Adding HTTPS
@@ -107,7 +112,7 @@ Point a hostname's DNS at the server, then:
 
 ```bash
 sed -i 's|^SITE_ADDRESS=.*|SITE_ADDRESS=api.example.com|' /opt/castify/.env
-cd /opt/castify && docker compose -f docker-compose.prod.yml up -d caddy
+/opt/castify/dc up -d caddy
 ```
 
 Caddy obtains and renews the certificate itself; no certbot. Remember to add the
