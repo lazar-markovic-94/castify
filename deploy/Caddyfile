@@ -1,0 +1,30 @@
+# Castify reverse proxy.
+#
+# SITE_ADDRESS comes from docker-compose.prod.yml and defaults to ":80",
+# meaning plain HTTP on whatever address the server answers to. To switch to
+# HTTPS, set SITE_ADDRESS=api.example.com in /opt/castify/.env and redeploy -
+# Caddy obtains and renews the certificate on its own, no certbot involved.
+
+{
+	admin off
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# Portfolio video uploads are allowed up to 100MB by the upload use cases.
+	request_body {
+		max_size 110MB
+	}
+
+	reverse_proxy app:8080 {
+		health_uri /actuator/health
+		health_interval 30s
+		health_timeout 5s
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

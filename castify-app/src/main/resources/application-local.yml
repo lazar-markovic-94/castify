@@ -2,8 +2,10 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/castify
-    username: ${DB_USERNAME:lazarmarkovic}
-    password: ${DB_PASSWORD:}
+    # Defaults match docker-compose.yml so a fresh checkout runs with no env vars.
+    # Override with DB_USERNAME / DB_PASSWORD to point at a different local role.
+    username: ${DB_USERNAME:castify}
+    password: ${DB_PASSWORD:castify123}
 
   jpa:
     show-sql: false  # Disabled for cleaner logs

@@ -65,8 +65,11 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 10MB
-      max-request-size: 10MB
+      # Must not sit below the largest limit the upload use cases enforce
+      # themselves (portfolio video: 100MB). At 10MB the framework rejected the
+      # request before the use case could return its own validation message.
+      max-file-size: 100MB
+      max-request-size: 100MB
       file-size-threshold: 0
 
 # Common server configuration

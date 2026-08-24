@@ -1,0 +1,76 @@
+# =============================================================================
+# Castify - server-side stack. Lives at /opt/castify/docker-compose.prod.yml
+# and is refreshed from this repo on every deploy.
+#
+# Values come from two env files (see deploy/README.md):
+#   /opt/castify/.env        long-lived secrets, written once by bootstrap
+#   /opt/castify/.env.image  APP_IMAGE=..., rewritten by CI on every deploy
+# =============================================================================
+name: castify
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-castify}
+      POSTGRES_USER: ${DB_USERNAME:-castify}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in /opt/castify/.env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-castify} -d ${DB_NAME:-castify}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Deliberately no `ports:` - the database is reachable only on the compose
+    # network. Use `docker compose exec db psql ...` to get at it.
+
+  app:
+    image: ${APP_IMAGE:?APP_IMAGE must be set - CI writes it to .env.image}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-develop}
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-castify}
+      DB_USERNAME: ${DB_USERNAME:-castify}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in /opt/castify/.env}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173}
+      UPLOAD_DIR: /app/uploads
+      # application-develop.yml logs to /var/log/castify, which does not exist
+      # in the image and is not writable by the non-root user. Redirect it.
+      LOGGING_FILE_NAME: /app/logs/castify.log
+      JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200}
+    volumes:
+      - uploads:/app/uploads
+      - app-logs:/app/logs
+    # No `ports:` either - Caddy is the only way in.
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # ":80" = plain HTTP on the bare IP. Set SITE_ADDRESS to a hostname in
+      # /opt/castify/.env and Caddy provisions a Let's Encrypt cert by itself.
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  db-data:
+  uploads:
+  app-logs:
+  caddy-data:
+  caddy-config:

@@ -26,6 +26,13 @@
 			<artifactId>castify-persistence</artifactId>
 		</dependency>
 
+		<!-- Actuator - backs /actuator/health, used by the container HEALTHCHECK
+		     and by the deploy workflow's post-deploy verification -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
 		<!-- Flyway - explicit dependency for auto-configuration -->
 		<dependency>
 			<groupId>org.flywaydb</groupId>

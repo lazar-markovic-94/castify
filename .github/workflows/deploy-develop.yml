@@ -1,6 +1,9 @@
 # =============================================================================
-# Backend Deployment - Deploy to Hetzner Server on develop branch
-# Triggers when code is pushed to develop branch
+# Builds a container image, pushes it to GHCR, and rolls the Hetzner stack
+# over to it. Triggered on every push to develop.
+#
+# Server prerequisites are created by deploy/bootstrap-server.sh.
+# Required secrets: HETZNER_SERVER_IP, HETZNER_SSH_KEY
 # =============================================================================
 
 name: Deploy Backend to Develop
@@ -9,91 +12,142 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - '**'
-      - '.github/workflows/deploy-develop.yml'
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Existing image tag to roll back to (e.g. sha-1a2b3c4). Leave blank to build HEAD.'
+        required: false
+        default: ''
+
+# Never let two deploys race for the same server.
+concurrency:
+  group: deploy-develop
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
-    name: Build and Deploy to Hetzner
+    name: Build image and deploy to Hetzner
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Set up Java 21
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build the application
-      - name: Build with Maven
-        run: ./mvnw clean package -DskipTests -B
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # Find the built JAR file
-      - name: Get JAR file name
-        id: jar
+      # Produces ghcr.io/<owner>/<repo>:develop and :sha-<short>, lowercased.
+      - name: Derive image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=develop
+            type=sha,prefix=sha-,format=short
+
+      - name: Build and push image
+        if: inputs.image_tag == ''
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # Hetzner Cloud is x86_64. Pinned explicitly so an image built on an
+          # arm64 machine (an Apple Silicon laptop, an arm runner) can never be
+          # pushed as :develop and fail to start on the server.
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # A manual run with image_tag set skips the build and redeploys an
+      # image that already exists in the registry - that is the rollback path.
+      - name: Resolve image to deploy
+        id: image
         run: |
-          JAR_FILE=$(ls castify-app/target/castify-*.jar | head -1)
-          echo "jar_file=$JAR_FILE" >> $GITHUB_OUTPUT
-          echo "Built JAR: $JAR_FILE"
+          REPO="ghcr.io/${{ github.repository }}"
+          REPO="${REPO,,}"                       # GHCR rejects uppercase
+          if [ -n "${{ inputs.image_tag }}" ]; then
+            echo "ref=${REPO}:${{ inputs.image_tag }}" >> "$GITHUB_OUTPUT"
+            echo "Rolling back to ${REPO}:${{ inputs.image_tag }}"
+          else
+            echo "ref=${REPO}:sha-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          fi
 
-      # Deploy to Hetzner server
-      - name: Deploy to Hetzner
+      - name: Deploy
         env:
           SSH_PRIVATE_KEY: ${{ secrets.HETZNER_SSH_KEY }}
           SERVER_IP: ${{ secrets.HETZNER_SERVER_IP }}
-          SERVER_USER: root
+          APP_IMAGE: ${{ steps.image.outputs.ref }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Set up SSH key
+          set -euo pipefail
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts 2>/dev/null
 
-          # Add server to known hosts
-          ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+          SSH="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes root@${SERVER_IP}"
 
-          # Copy JAR to server
-          scp -i ~/.ssh/deploy_key ${{ steps.jar.outputs.jar_file }} $SERVER_USER@$SERVER_IP:/opt/castify/castify.jar
+          # Refresh the stack definition from the repo so the server never
+          # drifts from what is committed here.
+          scp -i ~/.ssh/deploy_key \
+            deploy/docker-compose.prod.yml deploy/Caddyfile deploy/backup.sh \
+            "root@${SERVER_IP}:/opt/castify/"
+          $SSH "chmod 750 /opt/castify/backup.sh"
 
-          # Restart the service
-          ssh -i ~/.ssh/deploy_key $SERVER_USER@$SERVER_IP << 'EOF'
-            systemctl restart castify
-            sleep 5
-            systemctl status castify --no-pager
-          EOF
+          # The job's GITHUB_TOKEN is enough to pull; no long-lived registry
+          # credential is stored on the server.
+          $SSH "echo '${REGISTRY_TOKEN}' | docker login ghcr.io -u '${REGISTRY_USER}' --password-stdin"
 
-          echo "✅ Deployment completed!"
+          $SSH "printf 'APP_IMAGE=%s\n' '${APP_IMAGE}' > /opt/castify/.env.image"
+          $SSH "cd /opt/castify && \
+                docker compose --env-file .env --env-file .env.image \
+                  -f docker-compose.prod.yml pull && \
+                docker compose --env-file .env --env-file .env.image \
+                  -f docker-compose.prod.yml up -d --remove-orphans"
 
-      # Verify deployment
-      - name: Check service health
+          $SSH "docker logout ghcr.io >/dev/null 2>&1 || true"
+
+      - name: Verify health
         env:
           SERVER_IP: ${{ secrets.HETZNER_SERVER_IP }}
-          SSH_PRIVATE_KEY: ${{ secrets.HETZNER_SSH_KEY }}
         run: |
-          ssh -i ~/.ssh/deploy_key root@$SERVER_IP << 'EOF'
-            # Wait for service to be ready
-            sleep 10
+          set -euo pipefail
+          SSH="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes root@${SERVER_IP}"
 
-            # Check if service is running
-            if systemctl is-active --quiet castify; then
-              echo "✅ Service is running"
-
-              # Try to hit health endpoint
-              RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health || echo "000")
-              if [ "$RESPONSE" = "200" ]; then
-                echo "✅ Health check passed"
-              else
-                echo "⚠️  Health check returned: $RESPONSE"
-              fi
-            else
-              echo "❌ Service failed to start"
-              journalctl -u castify -n 50
-              exit 1
+          # Poll through Caddy, so this exercises the proxy as well as the app.
+          for i in $(seq 1 30); do
+            CODE=$($SSH "curl -s -o /dev/null -w '%{http_code}' http://localhost/actuator/health" || echo 000)
+            if [ "$CODE" = "200" ]; then
+              echo "Health check passed after ${i} attempt(s)"
+              exit 0
             fi
-          EOF
+            echo "attempt ${i}: /actuator/health -> ${CODE}"
+            sleep 5
+          done
+
+          echo "::error::Service did not become healthy within 150s"
+          $SSH "cd /opt/castify && docker compose -f docker-compose.prod.yml ps && \
+                docker compose -f docker-compose.prod.yml logs --tail=100 app"
+          exit 1
+
+      - name: Prune old images
+        if: success()
+        env:
+          SERVER_IP: ${{ secrets.HETZNER_SERVER_IP }}
+        run: |
+          ssh -i ~/.ssh/deploy_key root@${SERVER_IP} \
+            "docker image prune -af --filter 'until=168h'" || true

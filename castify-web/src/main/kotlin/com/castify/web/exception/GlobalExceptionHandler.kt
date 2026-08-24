@@ -13,6 +13,7 @@ import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.multipart.MaxUploadSizeExceededException
 import java.time.Instant
 import java.util.*
 
@@ -303,6 +304,26 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error)
     }
 
+    // ==================== 413 PAYLOAD TOO LARGE ====================
+
+    @ExceptionHandler(MaxUploadSizeExceededException::class)
+    fun handleMaxUploadSizeExceeded(
+        ex: MaxUploadSizeExceededException,
+        request: HttpServletRequest
+    ): ResponseEntity<ErrorResponse> {
+        logger.warn("Upload exceeded the configured multipart limit - Path: {}", request.requestURI)
+
+        val error = ErrorResponse(
+            status = HttpStatus.PAYLOAD_TOO_LARGE.value(),
+            errorCode = "FILE_TOO_LARGE",
+            message = "Uploaded file exceeds the maximum allowed size",
+            path = request.requestURI,
+            timestamp = Instant.now(),
+            correlationId = getOrGenerateCorrelationId(request)
+        )
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error)
+    }
+
     // ==================== CATCH-ALL HANDLER ====================
 
     @ExceptionHandler(Exception::class)
@@ -311,6 +332,16 @@ class GlobalExceptionHandler {
         request: HttpServletRequest
     ): ResponseEntity<ErrorResponse> {
         val correlationId = getOrGenerateCorrelationId(request)
+
+        // A client that hangs up mid-transfer is routine, not a fault. Logging
+        // it at ERROR with a stack trace buries real failures during uploads.
+        if (isClientDisconnect(ex)) {
+            logger.debug(
+                "Client disconnected during transfer: {} - Path: {}",
+                ex.javaClass.simpleName, request.requestURI
+            )
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
 
         logger.error("=".repeat(80))
         logger.error("UNHANDLED EXCEPTION - Correlation ID: {}", correlationId)
@@ -332,6 +363,20 @@ class GlobalExceptionHandler {
     }
 
     // ==================== HELPER METHODS ====================
+
+    /**
+     * Matched on name and message rather than type: ClientAbortException lives
+     * in Tomcat's package and AsyncRequestNotUsableException in Spring's, and
+     * neither is worth a hard dependency here.
+     */
+    private fun isClientDisconnect(ex: Exception): Boolean {
+        val name = ex.javaClass.simpleName
+        val message = ex.message ?: ""
+        return name.contains("ClientAbort") ||
+            name.contains("AsyncRequestNotUsable") ||
+            message.contains("Broken pipe") ||
+            message.contains("Connection reset")
+    }
 
     private fun getOrGenerateCorrelationId(request: HttpServletRequest): String {
         return request.getHeader("X-Correlation-ID")

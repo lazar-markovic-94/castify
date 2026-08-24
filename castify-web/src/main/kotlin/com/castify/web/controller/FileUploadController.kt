@@ -1,5 +1,6 @@
 package com.castify.web.controller
 
+import com.castify.domain.exception.DomainException
 import com.castify.domain.media.ContentType
 import com.castify.usecase.upload.FileUploadException
 import com.castify.usecase.upload.UploadProfileImageUseCase
@@ -35,11 +36,10 @@ class FileUploadController(
     @PostMapping("/profile-image", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     @Operation(summary = "Upload a profile image")
     fun uploadProfileImage(@RequestParam("file") file: MultipartFile): ResponseEntity<Map<String, String>> {
-        logger.info("=".repeat(80))
-        logger.info("PROFILE IMAGE UPLOAD REQUEST STARTED")
-        logger.info("=".repeat(80))
+        // Resolved before the try block so an unauthenticated call propagates
+        // to GlobalExceptionHandler as 401 rather than being swallowed below.
+        val userId = SecurityUtils.getCurrentUserId()
         try {
-            val userId = SecurityUtils.getCurrentUserId()
             logger.info("Profile image upload request received for user: $userId - filename: ${file.originalFilename}, size: ${file.size}, contentType: ${file.contentType}")
 
             val fileUrl = uploadProfileImageUseCase.execute(userId, file)
@@ -53,34 +53,24 @@ class FileUploadController(
                 "error" to e.error,
                 "details" to e.details
             ))
+        } catch (e: DomainException) {
+            // 404/409/422 from the use case must keep their status instead of
+            // being flattened into 500 by the catch-all below.
+            throw e
         } catch (e: Exception) {
-            logger.error("=".repeat(80))
-            logger.error("UNEXPECTED ERROR DURING PROFILE IMAGE UPLOAD", e)
-            logger.error("Exception type: ${e.javaClass.name}")
-            logger.error("Exception message: ${e.message}")
-            logger.error("Stack trace:", e)
-            logger.error("=".repeat(80))
+            logger.error("Unexpected error during profile image upload", e)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
                 "error" to "Unexpected error during upload",
-                "details" to (e.message ?: "No error message available"),
-                "exception" to e.javaClass.simpleName,
-                "stackTrace" to e.stackTrace.take(10).joinToString("\n") { "  at $it" }
+                "details" to (e.message ?: "No error message available")
             ))
-        } finally {
-            logger.info("=".repeat(80))
-            logger.info("PROFILE IMAGE UPLOAD REQUEST ENDED")
-            logger.info("=".repeat(80))
         }
     }
 
     @PostMapping("/introduction-video", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     @Operation(summary = "Upload an introduction video")
     fun uploadIntroductionVideo(@RequestParam("file") file: MultipartFile): ResponseEntity<Map<String, String>> {
-        logger.info("=".repeat(80))
-        logger.info("INTRODUCTION VIDEO UPLOAD REQUEST STARTED")
-        logger.info("=".repeat(80))
+        val userId = SecurityUtils.getCurrentUserId()
         try {
-            val userId = SecurityUtils.getCurrentUserId()
             logger.info("Introduction video upload request received for user: $userId - filename: ${file.originalFilename}, size: ${file.size}, contentType: ${file.contentType}")
 
             val fileUrl = uploadIntroductionVideoUseCase.execute(userId, file)
@@ -94,16 +84,14 @@ class FileUploadController(
                 "error" to e.error,
                 "details" to e.details
             ))
+        } catch (e: DomainException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Error uploading introduction video", e)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
                 "error" to "Unexpected error during video upload",
                 "details" to (e.message ?: "No error message available")
             ))
-        } finally {
-            logger.info("=".repeat(80))
-            logger.info("INTRODUCTION VIDEO UPLOAD REQUEST ENDED")
-            logger.info("=".repeat(80))
         }
     }
 
@@ -115,11 +103,8 @@ class FileUploadController(
         @RequestParam(required = false) title: String?,
         @RequestParam(required = false) description: String?
     ): ResponseEntity<Any> {
-        logger.info("=".repeat(80))
-        logger.info("PORTFOLIO MEDIA UPLOAD REQUEST STARTED")
-        logger.info("=".repeat(80))
+        val userId = SecurityUtils.getCurrentUserId()
         try {
-            val userId = SecurityUtils.getCurrentUserId()
             logger.info("Portfolio media upload request received for user: $userId - filename: ${file.originalFilename}, size: ${file.size}, contentType: ${file.contentType}")
 
             val mediaAsset = uploadPortfolioMediaUseCase.execute(userId, file, contentType, title, description)
@@ -133,46 +118,22 @@ class FileUploadController(
                 "error" to e.error,
                 "details" to e.details
             ))
+        } catch (e: DomainException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Error uploading portfolio media", e)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
                 "error" to "Unexpected error during portfolio media upload",
                 "details" to (e.message ?: "No error message available")
             ))
-        } finally {
-            logger.info("=".repeat(80))
-            logger.info("PORTFOLIO MEDIA UPLOAD REQUEST ENDED")
-            logger.info("=".repeat(80))
         }
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(Exception::class)
-    fun handleException(e: Exception): ResponseEntity<Map<String, String>>? {
-        // Ignore client disconnection errors (broken pipe, connection reset, etc.)
-        // These are harmless and occur when the browser cancels/closes the connection
-        val message = e.message ?: ""
-        val exceptionName = e.javaClass.simpleName
-
-        if (exceptionName.contains("ClientAbort") ||
-            exceptionName.contains("AsyncRequestNotUsable") ||
-            message.contains("Broken pipe") ||
-            message.contains("Connection reset")) {
-            logger.debug("Client disconnected during file transfer (this is normal): $exceptionName")
-            return null // Don't send response, client already disconnected
-        }
-
-        logger.error("=".repeat(80))
-        logger.error("CONTROLLER EXCEPTION HANDLER TRIGGERED", e)
-        logger.error("Exception type: ${e.javaClass.name}")
-        logger.error("Exception message: ${e.message}")
-        logger.error("=".repeat(80))
-        e.printStackTrace()
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf(
-            "error" to "Controller exception",
-            "details" to (e.message ?: "No details"),
-            "type" to e.javaClass.simpleName
-        ))
-    }
+    // NOTE: this controller deliberately has no local @ExceptionHandler.
+    // A controller-scoped handler takes precedence over GlobalExceptionHandler,
+    // so the previous catch-all here converted every domain exception into 500
+    // and echoed stack frames back to the caller. Client-disconnect noise is
+    // handled centrally instead.
 
     @GetMapping("/images/{filename}")
     @Operation(summary = "Serve uploaded image (for profile images)")
